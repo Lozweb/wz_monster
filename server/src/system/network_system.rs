@@ -33,8 +33,8 @@ pub fn add_netcode_network(app: &mut App) {
     };
 
     let transport = NetcodeServerTransport::new(server_config, NativeSocket::new(socket).unwrap()).unwrap();
-    app.insert_resource(server)
-        .insert_resource(transport);
+    app.insert_resource(server);
+    app.insert_resource(transport);
 }
 
 #[allow(clippy::too_many_arguments)]
@@ -136,13 +136,19 @@ pub fn server_update_system(
             }
         }
     }
+}
 
-    // update system inputs
+pub fn update_player_inputs_from_clients(
+    mut server: ResMut<RenetServer>,
+    mut query: Query<(&PlayerNetwork, &mut PlayerInput)>,
+) {
     for client_id in server.clients_id() {
         while let Some(message) = server.receive_message(client_id, ClientChannel::Input) {
             let input: PlayerInput = bincode::deserialize(&message).unwrap();
-            if let Some(player_entity) = lobby.players.get(&client_id) {
-                commands.entity(*player_entity).insert(input);
+            for (player_net, mut player_input) in &mut query {
+                if player_net.id == client_id {
+                    *player_input = input;
+                }
             }
         }
     }
@@ -150,30 +156,20 @@ pub fn server_update_system(
 
 pub fn server_network_sync(
     mut server: ResMut<RenetServer>,
-    query: Query<(Entity, &Transform), With<PlayerNetwork>>,
+    query: Query<(Entity, &Transform, &Sprite), With<PlayerNetwork>>,
 ) {
     let mut networked_entities = NetworkedEntities::default();
-    for (entity, transform) in query.iter() {
+    for (entity, transform, sprite) in query.iter() {
         networked_entities.entities.push(entity.to_bits());
         networked_entities.translations.push(transform.translation.into());
+        if let Some(texture) = &sprite.texture_atlas {
+            networked_entities.sprite_index.push(texture.index);
+            networked_entities.sprite_flip_x.push(sprite.flip_x);
+        }
     }
-
-    let sync_message = bincode::serialize(&networked_entities).unwrap();
-    server.broadcast_message(ServerChannel::NetworkedEntities, sync_message);
-}
-
-/*
-pub fn update_visualizer_system(
-    mut egui_contexts: EguiContexts,
-    mut visualizer: ResMut<RenetServerVisualizer<200>>,
-    server: Res<RenetServer>,
-) {
-    if let Ok(ctx) = egui_contexts.ctx_mut() {
-        visualizer.update(&server);
-        visualizer.show_window(ctx);
-    } else {
-        println!("Egui context is not available.");
+    if !networked_entities.entities.is_empty() {
+        let sync_message = bincode::serialize(&networked_entities).unwrap();
+        server.broadcast_message(ServerChannel::NetworkedEntities, sync_message);
     }
 }
 
- */

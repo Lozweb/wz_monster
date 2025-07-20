@@ -25,6 +25,8 @@ pub enum ServerMessages {
 pub struct NetworkedEntities {
     pub entities: Vec<u64>,
     pub translations: Vec<[f32; 3]>,
+    pub sprite_index: Vec<usize>,
+    pub sprite_flip_x: Vec<bool>,
 }
 
 impl From<ClientChannel> for u8 {

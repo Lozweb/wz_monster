@@ -4,10 +4,11 @@ use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_renet2::prelude::RenetClientPlugin;
 use client::entities::player::handle_player_input;
-use client::network::system::{client_send_input, client_syn_players};
+use client::network::system::{client_send_input, client_sync_players, update_player_inputs_from_server};
 use client::network::{add_netcode_network, ClientLobby, Connected, NetworkMapping};
 use game_core::entities::decor::system::setup_ground;
 use game_core::entities::player::component::PlayerInput;
+use game_core::entities::player::system::setup_player_texture;
 use renet2_visualizer::{RenetClientVisualizer, RenetVisualizerStyle};
 
 fn main() {
@@ -27,27 +28,30 @@ fn main() {
     app.add_plugins(EguiPlugin::default());
     app.add_plugins(WorldInspectorPlugin::new());
 
-    add_netcode_network(&mut app);
 
     app.insert_resource(ClientLobby::default());
-    app.insert_resource(PlayerInput::default());
     app.insert_resource(NetworkMapping::default());
+    app.insert_resource(PlayerInput::default());
 
-    app.add_systems(Update, handle_player_input);
+    add_netcode_network(&mut app);
+
     app.add_systems(Update, (
+        handle_player_input,
         client_send_input,
-        client_syn_players
+        client_sync_players,
+        update_player_inputs_from_server
     ).in_set(Connected));
 
     app.insert_resource(RenetClientVisualizer::<200>::new(RenetVisualizerStyle::default()));
 
-    app.add_systems(Startup, (setup_camera, setup_ground));
+    app.add_systems(Startup, (
+        setup_camera,
+        setup_ground,
+        setup_player_texture
+    ));
     app.run();
 }
 
 fn setup_camera(mut commands: Commands) {
     commands.spawn(Camera2d);
 }
-
-
-

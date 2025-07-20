@@ -1,5 +1,5 @@
-use bevy::prelude::{Bundle, Component, Name, Resource, Timer, TimerMode};
-use bevy_rapier2d::prelude::{ActiveEvents, LockedAxes, Sensor, Velocity};
+use bevy::prelude::{Bundle, Component, Handle, Image, Resource, Timer};
+use bevy_rapier2d::prelude::{ActiveEvents, Sensor};
 use bevy_renet2::prelude::ClientId;
 use serde::{Deserialize, Serialize};
 
@@ -12,8 +12,11 @@ pub struct PlayerInput {
     pub jump: bool,
 }
 
-#[derive(Component)]
+#[derive(Debug, Component)]
 pub struct Player(pub f32);
+
+#[derive(Resource, Clone)]
+pub struct PlayerTexture(pub Handle<Image>);
 
 #[derive(Component, Default)]
 pub struct Grounded(pub bool);
@@ -63,32 +66,4 @@ impl Default for SensorBundle {
 #[derive(Debug, Component)]
 pub struct PlayerNetwork {
     pub id: ClientId,
-}
-
-
-#[derive(Bundle)]
-pub struct ClientPlayerBundle {
-    name: Name,
-    locked_axes: LockedAxes,
-    velocity: Velocity,
-    animation_indices: AnimationIndices,
-    animation_timer: AnimationTimer,
-    player: Player,
-    player_input: PlayerInput,
-    grounded: Grounded,
-    jump_counter: JumpCounter,
-}
-
-pub fn create_client_player_bundle(client_id: &ClientId) -> ClientPlayerBundle {
-    ClientPlayerBundle {
-        name: Name::new(format!("Player_{client_id}")),
-        locked_axes: LockedAxes::ROTATION_LOCKED,
-        velocity: Velocity::zero(),
-        animation_indices: AnimationIndices { first: 1, last: 3 },
-        animation_timer: AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
-        player: Player(350.),
-        player_input: PlayerInput::default(),
-        grounded: Grounded(false),
-        jump_counter: JumpCounter { jumps_left: 2, max_jumps: 2 },
-    }
 }

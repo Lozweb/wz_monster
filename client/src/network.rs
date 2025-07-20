@@ -6,11 +6,10 @@ use std::collections::HashMap;
 use std::net::UdpSocket;
 use std::time::SystemTime;
 
-pub mod component;
 pub mod system;
 
 #[derive(Component)]
-struct ControlledPlayer;
+pub struct ControlledPlayer;
 
 #[derive(Default, Resource)]
 pub struct NetworkMapping(HashMap<Entity, Entity>);
