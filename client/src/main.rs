@@ -2,7 +2,7 @@ use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::prelude::*;
-use wz_monster::entities::decor::setup_ground;
+use game_core::entities::decor::system::setup_ground;
 use wz_monster::entities::player::PlayerPlugin;
 
 fn main() {

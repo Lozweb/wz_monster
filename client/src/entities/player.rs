@@ -1,17 +1,20 @@
-use crate::entities::player::component::Player;
-use bevy::input::ButtonInput;
-use bevy::prelude::{Component, KeyCode, Query, Res, Resource};
+use bevy::prelude::*;
+use game_core::entities::player::component::{create_player, Player, PlayerInput};
+pub struct PlayerPlugin;
 
-#[derive(Component, Resource, Default)]
-pub struct PlayerInput {
-    pub up: bool,
-    pub down: bool,
-    pub left: bool,
-    pub right: bool,
-    pub jump: bool,
+impl Plugin for PlayerPlugin {
+    fn build(&self, app: &mut App) {
+        app
+            .add_systems(Startup, create_player)
+            .add_systems(FixedUpdate, (
+                handle_player_input,
+            ));
+
+        app.insert_resource(PlayerInput::default());
+    }
 }
 
-pub fn handle_player_input(
+fn handle_player_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut player_info: Query<(&Player, &mut PlayerInput)>,
 ) {
@@ -23,3 +26,6 @@ pub fn handle_player_input(
         input.jump = keyboard_input.just_pressed(KeyCode::Space);
     }
 }
+
+
+

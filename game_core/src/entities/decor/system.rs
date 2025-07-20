@@ -1,18 +1,6 @@
-use bevy::prelude::{Assets, Color, ColorMaterial, Commands, Component, GlobalTransform, Mesh, Mesh2d, Rectangle, ResMut, Transform, Vec2};
-use bevy::sprite::MeshMaterial2d;
+use crate::entities::decor::component::Ground;
+use bevy::prelude::{Assets, Color, ColorMaterial, Commands, GlobalTransform, Mesh, Mesh2d, MeshMaterial2d, Rectangle, ResMut, Transform, Vec2};
 use bevy_rapier2d::prelude::{Collider, RigidBody};
-
-#[derive(Component)]
-pub struct Ground {
-    pub size: Vec2,
-    pub position: Vec2,
-}
-
-impl Ground {
-    fn new(size: Vec2, position: Vec2) -> Self {
-        Self { size, position }
-    }
-}
 
 pub fn setup_ground(
     commands: Commands,
@@ -26,9 +14,7 @@ pub fn setup_ground(
     create_ground(commands, meshes, materials, ground);
 }
 
-pub
-
-fn create_ground(
+pub fn create_ground(
     mut commands: Commands,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
