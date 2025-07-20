@@ -1,5 +1,5 @@
 [package]
-name = "wz_monster"
+name = "client"
 version = "0.1.0"
 edition = "2024"
 
@@ -7,4 +7,8 @@ edition = "2024"
 game_core = { path = "../game_core" }
 bevy = "0.16.1"
 bevy-inspector-egui = "0.32.0"
-bevy_rapier2d = "0.30.0"
+bevy_renet2 = { version = "0.10.0", features = ["netcode", "native_transport"] }
+bincode = "1.3"
+bevy_egui = "0.35.1"
+renet2_visualizer = { version = "0.10.0", features = ["bevy"] }
+

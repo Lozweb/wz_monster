@@ -1,20 +1,7 @@
 use bevy::prelude::*;
-use game_core::entities::player::component::{create_player, Player, PlayerInput};
-pub struct PlayerPlugin;
+use game_core::entities::player::component::{Player, PlayerInput};
 
-impl Plugin for PlayerPlugin {
-    fn build(&self, app: &mut App) {
-        app
-            .add_systems(Startup, create_player)
-            .add_systems(FixedUpdate, (
-                handle_player_input,
-            ));
-
-        app.insert_resource(PlayerInput::default());
-    }
-}
-
-fn handle_player_input(
+pub fn handle_player_input(
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut player_info: Query<(&Player, &mut PlayerInput)>,
 ) {

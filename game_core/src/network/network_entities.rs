@@ -5,11 +5,6 @@ use std::time::Duration;
 
 pub const PROTOCOL_ID: u64 = 7;
 
-#[derive(Debug, Component)]
-pub struct PlayerNetwork {
-    pub id: ClientId,
-}
-
 pub enum ClientChannel {
     Input,
     Command,
