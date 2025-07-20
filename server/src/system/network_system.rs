@@ -69,7 +69,7 @@ pub fn server_update_system(
                 let position = rand_player_position();
                 let texture = asset_server.load("textures/player1.png");
                 let layout = TextureAtlasLayout::from_grid(
-                    UVec2::new(32, 64), 4, 1, None, None);
+                    UVec2::new(32, 48), 4, 1, None, None);
                 let texture_atlas_layout = texture_atlas_layouts.add(layout);
                 let animation_indices = AnimationIndices { first: 1, last: 3 };
 
@@ -78,7 +78,7 @@ pub fn server_update_system(
                     RigidBody::Dynamic,
                     LockedAxes::ROTATION_LOCKED,
                     Velocity::zero(),
-                    Collider::cuboid(16.0, 32.0),
+                    Collider::cuboid(16.0, 24.0),
                     GravityScale(1.),
                     Friction::coefficient(0.0),
                     Sprite::from_atlas_image(

@@ -36,7 +36,7 @@ pub fn client_sync_players(
 
                 let texture = player_texture.0.clone();
                 let layout = TextureAtlasLayout::from_grid(
-                    UVec2::new(32, 64), 4, 1, None, None);
+                    UVec2::new(32, 48), 4, 1, None, None);
                 let texture_atlas_layout = texture_atlas_layouts.add(layout);
                 let animation_indices = AnimationIndices { first: 1, last: 3 };
 
@@ -105,7 +105,7 @@ pub fn update_player_inputs_from_server(
                 let sprite_flip_x = networked_entities.sprite_flip_x[i];
 
                 let layout = TextureAtlasLayout::from_grid(
-                    UVec2::new(32, 64), 4, 1, None, None);
+                    UVec2::new(32, 48), 4, 1, None, None);
                 let texture_atlas_layout = texture_atlas_layouts.add(layout);
 
                 commands.entity(*entity)
