@@ -1,10 +1,10 @@
 use bevy::app::App;
+use bevy::math::Vec3;
 use bevy::prelude::{AssetServer, Assets, Commands, Entity, EventReader, Name, Query, Res, ResMut, Resource, Sprite, TextureAtlas, TextureAtlasLayout, Timer, TimerMode, Transform, UVec2, With};
 use bevy_rapier2d::prelude::{ActiveEvents, Collider, Friction, GravityScale, LockedAxes, RigidBody, Sensor, Velocity};
 use bevy_renet2::netcode::{NativeSocket, NetcodeServerPlugin, NetcodeServerTransport, ServerAuthentication, ServerSetupConfig};
 use bevy_renet2::prelude::{ClientId, RenetServer, ServerEvent};
-use game_core::entities::player::component::{AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork};
-use game_core::entities::player::utils::rand_player_position;
+use game_core::entities::player::component::{AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork, PLAYER_SPRITE};
 use game_core::network::network_entities::{connection_config, ClientChannel, NetworkedEntities, ServerChannel, ServerMessages, PROTOCOL_ID};
 use renet2_visualizer::RenetServerVisualizer;
 use std::collections::HashMap;
@@ -66,8 +66,7 @@ pub fn server_update_system(
                 }
 
                 // Spawn a new system
-                let position = rand_player_position();
-                let texture = asset_server.load("textures/player1.png");
+                let position = Vec3::new(fastrand::f32() * 800.0 - 400.0, 0.0, 0.0);
                 let layout = TextureAtlasLayout::from_grid(
                     UVec2::new(32, 48), 4, 1, None, None);
                 let texture_atlas_layout = texture_atlas_layouts.add(layout);
@@ -82,7 +81,7 @@ pub fn server_update_system(
                     GravityScale(1.),
                     Friction::coefficient(0.0),
                     Sprite::from_atlas_image(
-                        texture,
+                        asset_server.load(PLAYER_SPRITE),
                         TextureAtlas {
                             layout: texture_atlas_layout,
                             index: animation_indices.first,

@@ -3,24 +3,29 @@ use bevy::prelude::*;
 use bevy_inspector_egui::bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_renet2::prelude::RenetClientPlugin;
-use client::entities::player::handle_player_input;
+use client::entities::player::{handle_player_input, setup_player_texture};
 use client::network::system::{client_send_input, client_sync_players, update_player_inputs_from_server};
 use client::network::{add_netcode_network, ClientLobby, Connected, NetworkMapping};
 use game_core::entities::decor::system::setup_ground;
 use game_core::entities::player::component::PlayerInput;
-use game_core::entities::player::system::setup_player_texture;
 use renet2_visualizer::{RenetClientVisualizer, RenetVisualizerStyle};
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            title: "Client".to_string(),
-            resolution: (1200.0, 720.0).into(),
+    app.add_plugins(DefaultPlugins
+        .set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Client".to_string(),
+                resolution: (1200.0, 720.0).into(),
+                ..default()
+            }),
             ..default()
-        }),
-        ..default()
-    }).set(ImagePlugin::default_nearest()));
+        }).set(ImagePlugin::default_nearest())
+        .set(AssetPlugin {
+            file_path: "../assets".into(),
+            ..default()
+        })
+    );
 
     app.add_plugins(RenetClientPlugin);
     app.add_plugins(FrameTimeDiagnosticsPlugin::default());

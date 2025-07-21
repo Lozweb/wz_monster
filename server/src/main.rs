@@ -1,6 +1,6 @@
 use bevy::app::{FixedUpdate, PluginGroup, Startup};
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::prelude::{default, App, Events, ImagePlugin, Update, Window, WindowPlugin};
+use bevy::prelude::{default, App, AssetPlugin, Events, ImagePlugin, Update, Window, WindowPlugin};
 use bevy::DefaultPlugins;
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
@@ -8,22 +8,26 @@ use bevy_rapier2d::plugin::{NoUserData, RapierPhysicsPlugin};
 use bevy_rapier2d::prelude::{CollisionEvent, RapierDebugRenderPlugin};
 use bevy_renet2::prelude::RenetServerPlugin;
 use game_core::entities::decor::system::setup_ground;
-use game_core::entities::player::system::{animate_sprite, update_grounded_system};
 use renet2_visualizer::RenetServerVisualizer;
 use server::system::decor_system::setup_camera;
 use server::system::network_system::{add_netcode_network, server_network_sync, server_update_system, update_player_inputs_from_clients, ServerLobby};
-use server::system::player_system::move_player_system;
+use server::system::player_system::{animate_sprite, move_player_system, update_grounded_system};
 
 fn main() {
     let mut app = App::new();
-    app.add_plugins(DefaultPlugins.set(WindowPlugin {
-        primary_window: Some(Window {
-            title: "Server".to_string(),
-            resolution: (1200.0, 720.0).into(),
+    app.add_plugins(DefaultPlugins
+        .set(WindowPlugin {
+            primary_window: Some(Window {
+                title: "Server".to_string(),
+                resolution: (1200.0, 720.0).into(),
+                ..default()
+            }),
             ..default()
-        }),
-        ..default()
-    }).set(ImagePlugin::default_nearest()));
+        }).set(ImagePlugin::default_nearest())
+        .set(AssetPlugin {
+            file_path: "../assets".into(),
+            ..default()
+        }));
 
     app.add_plugins(RenetServerPlugin);
     app.add_plugins(FrameTimeDiagnosticsPlugin::default());

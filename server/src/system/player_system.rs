@@ -1,7 +1,8 @@
 use bevy::math::Vec2;
-use bevy::prelude::Query;
+use bevy::prelude::{ChildOf, EventReader, Query, Res, Sprite, Time, With};
 use bevy_rapier2d::dynamics::Velocity;
-use game_core::entities::player::component::{Grounded, JumpCounter, Player, PlayerInput};
+use bevy_rapier2d::pipeline::CollisionEvent;
+use game_core::entities::player::component::{AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput};
 
 pub fn move_player_system(mut query: Query<(&Player, &PlayerInput, &mut Velocity, &Grounded, &mut JumpCounter)>) {
     for (player, input, mut velocity, grounded, mut jump_counter) in query.iter_mut() {
@@ -20,3 +21,51 @@ pub fn move_player_system(mut query: Query<(&Player, &PlayerInput, &mut Velocity
         }
     }
 }
+
+pub fn update_grounded_system(
+    mut collision_events: EventReader<CollisionEvent>,
+    child_of: Query<&ChildOf>,
+    mut grounded_query: Query<(&mut Grounded, &mut JumpCounter)>,
+) {
+    for event in collision_events.read() {
+        match event {
+            CollisionEvent::Started(e1, e2, _) | CollisionEvent::Stopped(e1, e2, _) => {
+                let is_grounded = matches!(event, CollisionEvent::Started(_, _, _));
+                for entity in [e1, e2] {
+                    if let Ok(child) = child_of.get(*entity) {
+                        if let Ok((mut grounded, mut jump_counter)) = grounded_query.get_mut(child.parent()) {
+                            grounded.0 = is_grounded;
+                            if is_grounded { jump_counter.reset(); }
+                        }
+                    }
+                }
+            }
+        }
+    }
+}
+
+pub fn animate_sprite(
+    time: Res<Time>,
+    mut query: Query<(&AnimationIndices, &mut AnimationTimer, &mut Sprite, &PlayerInput), With<Player>>,
+) {
+    for (indices, mut timer, mut sprite, input) in &mut query {
+        let player_move = input.left || input.right;
+        if player_move {
+            timer.0.tick(time.delta());
+            if timer.0.just_finished() {
+                if let Some(atlas) = &mut sprite.texture_atlas {
+                    atlas.index = if atlas.index >= indices.last {
+                        indices.first
+                    } else {
+                        atlas.index + 1
+                    };
+                }
+            }
+        } else if let Some(atlas) = &mut sprite.texture_atlas {
+            atlas.index = indices.first;
+        }
+
+        sprite.flip_x = if input.left { false } else { input.right }
+    }
+}
+

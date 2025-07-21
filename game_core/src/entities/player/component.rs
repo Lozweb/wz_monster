@@ -3,6 +3,8 @@ use bevy_rapier2d::prelude::{ActiveEvents, Sensor};
 use bevy_renet2::prelude::ClientId;
 use serde::{Deserialize, Serialize};
 
+pub const PLAYER_SPRITE: &str = "textures/player1.png";
+
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, Component, Resource)]
 pub struct PlayerInput {
     pub up: bool,

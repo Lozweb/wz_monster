@@ -1,5 +1,5 @@
 use bevy::prelude::*;
-use game_core::entities::player::component::PlayerInput;
+use game_core::entities::player::component::{PlayerInput, PlayerTexture, PLAYER_SPRITE};
 
 pub fn handle_player_input(
     mut player_input: ResMut<PlayerInput>,
@@ -12,6 +12,9 @@ pub fn handle_player_input(
     player_input.jump = keyboard_input.just_pressed(KeyCode::Space);
 }
 
+pub fn setup_player_texture(mut commands: Commands, asset_server: Res<AssetServer>) {
+    commands.insert_resource(PlayerTexture(asset_server.load(PLAYER_SPRITE)));
+}
 
 
 
