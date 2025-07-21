@@ -1,3 +1,4 @@
+use crate::entities::player::texture::TextureEntityType;
 use bevy::prelude::Component;
 use bevy_renet2::prelude::{ChannelConfig, ClientId, ConnectionConfig, SendType};
 use serde::{Deserialize, Serialize};
@@ -17,7 +18,12 @@ pub enum ServerChannel {
 
 #[derive(Debug, Serialize, Deserialize, Component)]
 pub enum ServerMessages {
-    PlayerCreate { entity: u64, id: ClientId, translation: [f32; 3] },
+    PlayerCreate {
+        entity: u64,
+        id: ClientId,
+        translation: [f32; 3],
+        texture_entity_type: TextureEntityType,
+    },
     PlayerRemove { id: ClientId },
 }
 
@@ -27,6 +33,7 @@ pub struct NetworkedEntities {
     pub translations: Vec<[f32; 3]>,
     pub sprite_index: Vec<usize>,
     pub sprite_flip_x: Vec<bool>,
+    pub texture_entity_type: Vec<TextureEntityType>,
 }
 
 impl From<ClientChannel> for u8 {

@@ -1,22 +1,16 @@
 use crate::network::{ClientLobby, ControlledPlayer, CurrentClientId, NetworkMapping, PlayerInfo};
 use bevy::asset::Assets;
 use bevy::image::{TextureAtlas, TextureAtlasLayout};
-use bevy::math::UVec2;
-use bevy::prelude::{Commands, DetectChanges, Entity, Name, Res, ResMut, Sprite, Timer, TimerMode, Transform};
+use bevy::math::Vec3;
+use bevy::prelude::{Commands, Entity, Name, Res, ResMut, Sprite, Timer, TimerMode, Transform};
 use bevy_renet2::prelude::RenetClient;
-use game_core::entities::player::component::{AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork, PlayerTexture};
-use game_core::network::network_entities::{ClientChannel, NetworkedEntities, ServerChannel, ServerMessages};
-
-pub fn client_send_input(player_input: Res<PlayerInput>, mut client: ResMut<RenetClient>) {
-    if player_input.is_changed() {
-        let input_message = bincode::serialize(&*player_input).unwrap();
-        client.send_message(ClientChannel::Input, input_message);
-    }
-}
+use game_core::entities::player::component::{AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork};
+use game_core::entities::player::texture::{texture_entity_to_handle, PlayerTextures, TextureEntity};
+use game_core::network::network_entities::{NetworkedEntities, ServerChannel, ServerMessages};
 
 #[allow(clippy::too_many_arguments)]
 pub fn client_sync_players(
-    player_texture: Res<PlayerTexture>,
+    texture: Res<PlayerTextures>,
     client_id: Res<CurrentClientId>,
     mut commands: Commands,
     mut client: ResMut<RenetClient>,
@@ -29,33 +23,30 @@ pub fn client_sync_players(
         let server_message = bincode::deserialize(&message).unwrap();
 
         match server_message {
-            ServerMessages::PlayerCreate { id, translation, entity } => {
+            ServerMessages::PlayerCreate { id, translation, entity, texture_entity_type } => {
                 println!("Player created: {id} at {translation:?}");
 
                 let position = translation.into();
-
-                let texture = player_texture.0.clone();
-                let layout = TextureAtlasLayout::from_grid(
-                    UVec2::new(32, 48), 4, 1, None, None);
-                let texture_atlas_layout = texture_atlas_layouts.add(layout);
-                let animation_indices = AnimationIndices { first: 1, last: 3 };
+                let rick = TextureEntity::new(&texture_entity_type);
+                let (image, layout) =
+                    texture_entity_to_handle(&rick.player_texture, &mut texture_atlas_layouts, &texture);
 
                 let mut client_entity = commands.spawn((
                     Name::new("Player"),
                     Sprite::from_atlas_image(
-                        texture,
+                        image,
                         TextureAtlas {
-                            layout: texture_atlas_layout,
-                            index: animation_indices.first,
+                            layout,
+                            index: rick.animation_indices.first,
                         },
                     ),
-                    animation_indices,
+                    rick.animation_indices,
                     AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
                     Player(350.),
                     PlayerInput::default(),
                     Grounded(false),
                     JumpCounter { jumps_left: 2, max_jumps: 2 },
-                    Transform::from_translation(position),
+                    Transform::from_translation(position).with_scale(Vec3::splat(0.5)),
                     PlayerNetwork { id },
                 ));
 
@@ -89,31 +80,34 @@ pub fn update_player_inputs_from_server(
     mut client: ResMut<RenetClient>,
     network_mapping: ResMut<NetworkMapping>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    player_texture: Res<PlayerTexture>,
+    player_textures: Res<PlayerTextures>,
 ) {
     while let Some(message) = client.receive_message(ServerChannel::NetworkedEntities) {
         let networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
 
         for i in 0..networked_entities.entities.len() {
             if let Some(entity) = network_mapping.0.get(&Entity::from_bits(networked_entities.entities[i])) {
-                let translation = networked_entities.translations[i].into();
-                let transform = Transform {
-                    translation,
-                    ..Default::default()
-                };
                 let sprite_index = networked_entities.sprite_index[i];
                 let sprite_flip_x = networked_entities.sprite_flip_x[i];
+                let texture_entity_type = &networked_entities.texture_entity_type[i];
+                let transform = Transform {
+                    translation: networked_entities.translations[i].into(),
+                    scale: Vec3::splat(0.5),
+                    ..Default::default()
+                };
 
-                let layout = TextureAtlasLayout::from_grid(
-                    UVec2::new(32, 48), 4, 1, None, None);
-                let texture_atlas_layout = texture_atlas_layouts.add(layout);
+                let (image, layout) = texture_entity_to_handle(
+                    texture_entity_type,
+                    &mut texture_atlas_layouts,
+                    &player_textures,
+                );
 
                 commands.entity(*entity)
                     .insert(transform)
                     .insert(Sprite {
-                        image: player_texture.0.clone(),
+                        image,
                         texture_atlas: Some(TextureAtlas {
-                            layout: texture_atlas_layout,
+                            layout,
                             index: sprite_index,
                         }),
                         flip_x: sprite_flip_x,

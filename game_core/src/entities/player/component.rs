@@ -1,9 +1,10 @@
-use bevy::prelude::{Bundle, Component, Handle, Image, Resource, Timer};
+use bevy::prelude::{Bundle, Component, Resource, Timer};
 use bevy_rapier2d::prelude::{ActiveEvents, Sensor};
 use bevy_renet2::prelude::ClientId;
 use serde::{Deserialize, Serialize};
 
 pub const PLAYER_SPRITE: &str = "textures/player1.png";
+
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, Component, Resource)]
 pub struct PlayerInput {
@@ -16,9 +17,6 @@ pub struct PlayerInput {
 
 #[derive(Debug, Component)]
 pub struct Player(pub f32);
-
-#[derive(Resource, Clone)]
-pub struct PlayerTexture(pub Handle<Image>);
 
 #[derive(Component, Default)]
 pub struct Grounded(pub bool);

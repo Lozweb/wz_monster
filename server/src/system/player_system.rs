@@ -65,7 +65,11 @@ pub fn animate_sprite(
             atlas.index = indices.first;
         }
 
-        sprite.flip_x = if input.left { false } else { input.right }
+        if input.left {
+            sprite.flip_x = false;
+        } else if input.right {
+            sprite.flip_x = true;
+        }
     }
 }
 

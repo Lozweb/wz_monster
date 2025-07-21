@@ -1,10 +1,11 @@
 use bevy::app::App;
 use bevy::math::Vec3;
-use bevy::prelude::{AssetServer, Assets, Commands, Entity, EventReader, Name, Query, Res, ResMut, Resource, Sprite, TextureAtlas, TextureAtlasLayout, Timer, TimerMode, Transform, UVec2, With};
+use bevy::prelude::{AssetServer, Assets, Commands, Entity, EventReader, Name, Query, Res, ResMut, Resource, Sprite, TextureAtlas, TextureAtlasLayout, Timer, TimerMode, Transform, With};
 use bevy_rapier2d::prelude::{ActiveEvents, Collider, Friction, GravityScale, LockedAxes, RigidBody, Sensor, Velocity};
 use bevy_renet2::netcode::{NativeSocket, NetcodeServerPlugin, NetcodeServerTransport, ServerAuthentication, ServerSetupConfig};
 use bevy_renet2::prelude::{ClientId, RenetServer, ServerEvent};
-use game_core::entities::player::component::{AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork, PLAYER_SPRITE};
+use game_core::entities::player::component::{AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork};
+use game_core::entities::player::texture::{TextureEntity, TextureEntityType};
 use game_core::network::network_entities::{connection_config, ClientChannel, NetworkedEntities, ServerChannel, ServerMessages, PROTOCOL_ID};
 use renet2_visualizer::RenetServerVisualizer;
 use std::collections::HashMap;
@@ -54,6 +55,16 @@ pub fn server_update_system(
                 println!("Client {client_id} connected");
                 visualizer.add_client(*client_id);
 
+                // Spawn a new system
+                let position = Vec3::new(fastrand::f32() * 800.0 - 400.0, 0.0, 0.0);
+                let texture_entity_type = if fastrand::bool() {
+                    TextureEntityType::Rick1
+                } else {
+                    TextureEntityType::Rick2
+                };
+                let rick = TextureEntity::new(&texture_entity_type);
+                let texture_atlas_layout = texture_atlas_layouts.add(rick.texture_atlas_layout);
+
                 // Spawn existing players for the new client
                 for (entity, player, transform) in players.iter() {
                     let translation: [f32; 3] = transform.translation.into();
@@ -61,47 +72,42 @@ pub fn server_update_system(
                         id: player.id,
                         entity: entity.to_bits(),
                         translation,
+                        texture_entity_type: texture_entity_type.clone(),
                     }).unwrap();
                     server.send_message(*client_id, ServerChannel::ServerMessages, message);
                 }
 
-                // Spawn a new system
-                let position = Vec3::new(fastrand::f32() * 800.0 - 400.0, 0.0, 0.0);
-                let layout = TextureAtlasLayout::from_grid(
-                    UVec2::new(32, 48), 4, 1, None, None);
-                let texture_atlas_layout = texture_atlas_layouts.add(layout);
-                let animation_indices = AnimationIndices { first: 1, last: 3 };
 
                 let player_entity = commands.spawn((
                     Name::new("Player"),
                     RigidBody::Dynamic,
                     LockedAxes::ROTATION_LOCKED,
                     Velocity::zero(),
-                    Collider::cuboid(16.0, 24.0),
+                    Collider::cuboid(59.0, 80.0),
                     GravityScale(1.),
                     Friction::coefficient(0.0),
                     Sprite::from_atlas_image(
-                        asset_server.load(PLAYER_SPRITE),
+                        asset_server.load(rick.texture_path),
                         TextureAtlas {
                             layout: texture_atlas_layout,
-                            index: animation_indices.first,
+                            index: rick.animation_indices.first,
                         },
                     ),
-                    animation_indices,
+                    rick.animation_indices,
                     AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
                     Player(350.),
                     PlayerInput::default(),
                     Grounded(false),
                     JumpCounter { jumps_left: 2, max_jumps: 2 },
-                    Transform::from_translation(position),
-                ))
+                    Transform::from_translation(position).with_scale(Vec3::splat(0.5)),
+                )).insert(texture_entity_type.clone())
                     .with_children(|parent| {
                         parent.spawn((
                             Name::new("Player Sensor"),
                             Collider::cuboid(10.0, 2.0),
                             Sensor,
                             ActiveEvents::COLLISION_EVENTS,
-                            Transform::from_xyz(0.0, -34.0, 0.0),
+                            Transform::from_xyz(0.0, -82.0, 0.0),
                         ));
                     })
                     .insert(PlayerNetwork { id: *client_id })
@@ -116,6 +122,7 @@ pub fn server_update_system(
                     id: player_entity.to_bits(),
                     entity: player_entity.to_bits(),
                     translation,
+                    texture_entity_type,
                 }).unwrap();
 
                 server.broadcast_message(ServerChannel::ServerMessages, message);
@@ -155,15 +162,16 @@ pub fn update_player_inputs_from_clients(
 
 pub fn server_network_sync(
     mut server: ResMut<RenetServer>,
-    query: Query<(Entity, &Transform, &Sprite), With<PlayerNetwork>>,
+    query: Query<(Entity, &Transform, &Sprite, &TextureEntityType), With<PlayerNetwork>>,
 ) {
     let mut networked_entities = NetworkedEntities::default();
-    for (entity, transform, sprite) in query.iter() {
+    for (entity, transform, sprite, texture_entity_type) in query.iter() {
         networked_entities.entities.push(entity.to_bits());
         networked_entities.translations.push(transform.translation.into());
         if let Some(texture) = &sprite.texture_atlas {
             networked_entities.sprite_index.push(texture.index);
             networked_entities.sprite_flip_x.push(sprite.flip_x);
+            networked_entities.texture_entity_type.push(texture_entity_type.clone());
         }
     }
     if !networked_entities.entities.is_empty() {

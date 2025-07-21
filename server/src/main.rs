@@ -1,12 +1,11 @@
 use bevy::app::{FixedUpdate, PluginGroup, Startup};
 use bevy::diagnostic::{FrameTimeDiagnosticsPlugin, LogDiagnosticsPlugin};
-use bevy::prelude::{default, App, AssetPlugin, Events, ImagePlugin, Update, Window, WindowPlugin};
+use bevy::prelude::{default, App, AssetPlugin, Events, ImagePlugin, Res, ResMut, Update, Window, WindowPlugin};
 use bevy::DefaultPlugins;
-use bevy_egui::EguiPlugin;
-use bevy_inspector_egui::quick::WorldInspectorPlugin;
+use bevy_egui::{EguiContexts, EguiPlugin};
 use bevy_rapier2d::plugin::{NoUserData, RapierPhysicsPlugin};
-use bevy_rapier2d::prelude::{CollisionEvent, RapierDebugRenderPlugin};
-use bevy_renet2::prelude::RenetServerPlugin;
+use bevy_rapier2d::prelude::CollisionEvent;
+use bevy_renet2::prelude::{RenetServer, RenetServerPlugin};
 use game_core::entities::decor::system::setup_ground;
 use renet2_visualizer::RenetServerVisualizer;
 use server::system::decor_system::setup_camera;
@@ -32,10 +31,12 @@ fn main() {
     app.add_plugins(RenetServerPlugin);
     app.add_plugins(FrameTimeDiagnosticsPlugin::default());
     app.add_plugins(LogDiagnosticsPlugin::default());
-    app.add_plugins(EguiPlugin::default());
-    app.add_plugins(WorldInspectorPlugin::new());
+    app.add_plugins(EguiPlugin {
+        enable_multipass_for_primary_context: false,
+    });
     app.add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0));
-    app.add_plugins(RapierDebugRenderPlugin::default());
+    //app.add_plugins(WorldInspectorPlugin::new());
+    //app.add_plugins(RapierDebugRenderPlugin::default());
 
     app.insert_resource(ServerLobby::default());
     app.insert_resource(RenetServerVisualizer::<200>::default());
@@ -46,7 +47,8 @@ fn main() {
 
     app.add_systems(Update, (
         server_update_system,
-        animate_sprite
+        animate_sprite,
+        update_visualizer_system
     ));
 
     app.add_systems(FixedUpdate, (
@@ -65,3 +67,7 @@ fn main() {
     app.run();
 }
 
+fn update_visualizer_system(mut egui_contexts: EguiContexts, mut visualizer: ResMut<RenetServerVisualizer<200>>, server: Res<RenetServer>) {
+    visualizer.update(&server);
+    visualizer.show_window(egui_contexts.ctx_mut());
+}
