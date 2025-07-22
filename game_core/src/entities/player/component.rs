@@ -1,4 +1,4 @@
-use bevy::prelude::{Bundle, Component, Resource, Timer};
+use bevy::prelude::{Bundle, Component, Deref, Resource, Timer, Vec2};
 use bevy_rapier2d::prelude::{ActiveEvents, Sensor};
 use bevy_renet2::prelude::ClientId;
 use serde::{Deserialize, Serialize};
@@ -13,7 +13,15 @@ pub struct PlayerInput {
     pub left: bool,
     pub right: bool,
     pub jump: bool,
+    pub aim_direction: f32,
 }
+#[derive(Resource, Default)]
+pub struct AimDirection(pub f32);
+#[derive(Component)]
+pub struct MainCamera;
+
+#[derive(Resource, Debug, Default, Deref)]
+pub struct MouseWorldCoords(pub Option<Vec2>);
 
 #[derive(Debug, Component)]
 pub struct Player(pub f32);
