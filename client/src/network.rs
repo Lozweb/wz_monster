@@ -1,4 +1,4 @@
-use bevy::prelude::{App, Component, Entity, EventReader, IntoScheduleConfigs, Resource, SystemSet, Update};
+use bevy::prelude::{App, Entity, EventReader, IntoScheduleConfigs, Resource, SystemSet, Update};
 use bevy_renet2::netcode::{ClientAuthentication, NativeSocket, NetcodeClientPlugin, NetcodeClientTransport, NetcodeTransportError};
 use bevy_renet2::prelude::{client_connected, ClientId, RenetClient};
 use game_core::network::network_entities::{connection_config, PROTOCOL_ID};
@@ -7,10 +7,6 @@ use std::net::UdpSocket;
 use std::time::SystemTime;
 
 pub mod system;
-
-#[derive(Component)]
-pub struct ControlledPlayer;
-
 #[derive(Default, Resource)]
 pub struct NetworkMapping(HashMap<Entity, Entity>);
 

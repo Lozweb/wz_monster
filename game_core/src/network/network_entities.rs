@@ -1,4 +1,5 @@
-use crate::entities::player::texture::TextureEntityType;
+use crate::entities::player::texture::PlayerTextureEntityType;
+use crate::entities::weapons::texture::WeaponTextureEntityType;
 use bevy::prelude::Component;
 use bevy_renet2::prelude::{ChannelConfig, ClientId, ConnectionConfig, SendType};
 use serde::{Deserialize, Serialize};
@@ -22,7 +23,8 @@ pub enum ServerMessages {
         entity: u64,
         id: ClientId,
         translation: [f32; 3],
-        texture_entity_type: TextureEntityType,
+        player_texture_entity_type: PlayerTextureEntityType,
+        weapon_texture_entity_type: WeaponTextureEntityType,
     },
     PlayerRemove { id: ClientId },
 }
@@ -33,7 +35,7 @@ pub struct NetworkedEntities {
     pub translations: Vec<[f32; 3]>,
     pub sprite_index: Vec<usize>,
     pub sprite_flip_x: Vec<bool>,
-    pub texture_entity_type: Vec<TextureEntityType>,
+    pub player_texture_entity_type: Vec<PlayerTextureEntityType>,
 }
 
 impl From<ClientChannel> for u8 {

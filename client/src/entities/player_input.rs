@@ -1,7 +1,6 @@
-use crate::network::ControlledPlayer;
 use bevy::prelude::*;
 use bevy_renet2::prelude::RenetClient;
-use game_core::entities::player::component::{MainCamera, MouseWorldCoords, PlayerInput};
+use game_core::entities::player::component::{ControlledPlayer, MainCamera, MouseWorldCoords, PlayerInput};
 use game_core::network::network_entities::ClientChannel;
 
 pub fn client_send_input(

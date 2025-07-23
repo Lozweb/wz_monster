@@ -5,6 +5,8 @@ use serde::{Deserialize, Serialize};
 
 pub const PLAYER_SPRITE: &str = "textures/player1.png";
 
+#[derive(Component)]
+pub struct ControlledPlayer;
 
 #[derive(Debug, Default, Clone, Copy, Serialize, Deserialize, Component, Resource)]
 pub struct PlayerInput {

@@ -1,17 +1,21 @@
-use crate::network::{ClientLobby, ControlledPlayer, CurrentClientId, NetworkMapping, PlayerInfo};
+use crate::network::{ClientLobby, CurrentClientId, NetworkMapping, PlayerInfo};
 use bevy::asset::Assets;
-use bevy::color::Color;
+
 use bevy::image::{TextureAtlas, TextureAtlasLayout};
 use bevy::math::Vec3;
-use bevy::prelude::{ColorMaterial, Commands, Entity, Mesh, Mesh2d, MeshMaterial2d, Name, Rectangle, Res, ResMut, Sprite, Timer, TimerMode, Transform};
+use bevy::prelude::{info, ColorMaterial, Commands, Entity, Mesh, Res, ResMut, Sprite, Transform};
 use bevy_renet2::prelude::RenetClient;
-use game_core::entities::player::component::{AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork};
-use game_core::entities::player::texture::{texture_entity_to_handle, PlayerTextures, TextureEntity, TextureEntityType};
+use game_core::entities::player::component::ControlledPlayer;
+use game_core::entities::player::entity::spawn_player_entity;
+use game_core::entities::player::texture::{player_texture_entity_to_handle, PlayerTextureEntity, PlayerTextureEntityType, PlayerTextures};
+use game_core::entities::weapons::entity::spawn_weapon_entity;
+use game_core::entities::weapons::texture::WeaponTextures;
 use game_core::network::network_entities::{NetworkedEntities, ServerChannel, ServerMessages};
 
 #[allow(clippy::too_many_arguments)]
 pub fn client_sync_players(
-    texture: Res<PlayerTextures>,
+    mut player_textures: Res<PlayerTextures>,
+    mut weapon_textures: Res<WeaponTextures>,
     client_id: Res<CurrentClientId>,
     mut commands: Commands,
     mut client: ResMut<RenetClient>,
@@ -26,42 +30,32 @@ pub fn client_sync_players(
         let server_message = bincode::deserialize(&message).unwrap();
 
         match server_message {
-            ServerMessages::PlayerCreate { id, translation, entity, texture_entity_type } => {
-                println!("Player created: {id} at {translation:?}");
+            ServerMessages::PlayerCreate { id, translation, entity, player_texture_entity_type, weapon_texture_entity_type } => {
+                info!("Player created: {id} at {translation:?}");
 
                 let position = translation.into();
-                let rick = TextureEntity::new(&texture_entity_type);
-                let (image, layout) =
-                    texture_entity_to_handle(&rick.player_texture, &mut texture_atlas_layouts, &texture);
+                let rick_texture = PlayerTextureEntity::new(&player_texture_entity_type);
 
-                let client_entity = commands.spawn((
-                    Name::new("Player"),
-                    Sprite::from_atlas_image(
-                        image,
-                        TextureAtlas {
-                            layout,
-                            index: rick.animation_indices.first,
-                        },
-                    ),
-                    rick.animation_indices,
-                    AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
-                    Player(350.),
-                    PlayerInput::default(),
-                    Grounded(false),
-                    JumpCounter { jumps_left: 2, max_jumps: 2 },
-                    Transform::from_translation(position).with_scale(Vec3::splat(0.5)),
-                    PlayerNetwork { id },
-                )).id();
+                let client_entity = spawn_player_entity(
+                    &mut commands,
+                    &mut texture_atlas_layouts,
+                    &mut player_textures,
+                    position,
+                    &rick_texture.player_texture_entity_type,
+                    client_id,
+                );
 
-                commands.entity(client_entity).with_children(|parent| {
-                    parent.spawn((
-                        Name::new("Weapons"),
-                        Mesh2d(meshes.add(Mesh::from(Rectangle::new(50., 10.)))),
-                        MeshMaterial2d(materials.add(Color::BLACK)),
-                        // todo on flip x => x = -18.0
-                        Transform::from_xyz(18.0, -49.0, 10.0),
-                    ));
-                });
+                let (disk_entity, weapon_entity) = spawn_weapon_entity(
+                    &mut commands,
+                    &mut meshes,
+                    &mut materials,
+                    &mut texture_atlas_layouts,
+                    &mut weapon_textures,
+                    &weapon_texture_entity_type,
+                );
+
+                commands.entity(client_entity).add_child(disk_entity);
+                commands.entity(disk_entity).add_child(weapon_entity);
 
                 if client_id == id {
                     commands.entity(client_entity).insert(ControlledPlayer);
@@ -104,7 +98,7 @@ pub fn update_player_inputs_from_server(
                     entity,
                     networked_entities.sprite_index[i],
                     networked_entities.sprite_flip_x[i],
-                    &networked_entities.texture_entity_type[i],
+                    &networked_entities.player_texture_entity_type[i],
                     networked_entities.translations[i].into(),
                     &mut commands,
                     &mut texture_atlas_layouts,
@@ -120,13 +114,13 @@ fn animate_player(
     entity: &Entity,
     sprite_index:
     usize, sprite_flip_x:
-    bool, texture_entity_type: &TextureEntityType,
+    bool, texture_entity_type: &PlayerTextureEntityType,
     translation: Vec3,
     commands: &mut Commands,
     texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
     player_textures: &Res<PlayerTextures>,
 ) {
-    let (image, layout) = texture_entity_to_handle(
+    let (image, layout) = player_texture_entity_to_handle(
         texture_entity_type,
         texture_atlas_layouts,
         player_textures,

@@ -8,7 +8,9 @@ use client::network::system::{client_sync_players, update_player_inputs_from_ser
 use client::network::{add_netcode_network, ClientLobby, Connected, NetworkMapping};
 use game_core::entities::decor::system::setup_ground;
 use game_core::entities::player::component::{AimDirection, MainCamera, MouseWorldCoords, PlayerInput};
+use game_core::entities::player::system::weapon_rotation_with_mouse;
 use game_core::entities::player::texture::player_textures_system;
+use game_core::entities::weapons::texture::weapon_texture_system;
 
 fn main() {
     let mut app = App::new();
@@ -46,13 +48,15 @@ fn main() {
         client_send_input,
         client_sync_players,
         update_player_inputs_from_server,
-        update_mouse_coords
+        update_mouse_coords,
+        weapon_rotation_with_mouse
     ).in_set(Connected));
 
     app.add_systems(Startup, (
         setup_camera,
         setup_ground,
-        player_textures_system
+        player_textures_system,
+        weapon_texture_system
     ));
     app.run();
 }

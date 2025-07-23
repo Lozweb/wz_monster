@@ -1,4 +1,3 @@
-use bevy::log::info;
 use bevy::math::Vec2;
 use bevy::prelude::{ChildOf, EventReader, Query, Res, Sprite, Time, With};
 use bevy_rapier2d::dynamics::Velocity;
@@ -71,8 +70,6 @@ pub fn animate_sprite(
         } else if input.right {
             sprite.flip_x = true;
         }
-
-        info!("aim_direction: {}", input.aim_direction);
     }
 }
 
