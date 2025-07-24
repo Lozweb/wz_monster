@@ -138,3 +138,4 @@ pub fn weapon_texture_system(mut commands: Commands, asset_server: Res<AssetServ
     );
     commands.insert_resource(weapon_textures);
 }
+

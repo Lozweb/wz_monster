@@ -1,3 +1,4 @@
+use crate::entities::weapons::component::{PivotDisk, Weapon};
 use crate::entities::weapons::texture::{weapon_texture_entity_to_handle, WeaponTextureEntity, WeaponTextureEntityType, WeaponTextures};
 use bevy::asset::Assets;
 use bevy::color::Color;
@@ -15,6 +16,7 @@ pub fn spawn_weapon_entity(
 ) -> (Entity, Entity) {
     let disk_entity = commands.spawn((
         Name::new("PivotDisk"),
+        PivotDisk,
         Mesh2d(meshes.add(Mesh::from(Circle::new(40.0)))),
         MeshMaterial2d(materials.add(Color::srgba(0., 0., 0., 0.))),
         Transform::from_xyz(9.5, -31.6, 0.),
@@ -28,6 +30,7 @@ pub fn spawn_weapon_entity(
 
     let weapon_entity = commands.spawn((
         Name::new("Weapons"),
+        Weapon,
         Sprite::from_atlas_image(
             image,
             TextureAtlas {

@@ -13,7 +13,7 @@ use game_core::entities::weapons::texture::weapon_texture_system;
 use renet2_visualizer::RenetServerVisualizer;
 use server::system::decor_system::setup_camera;
 use server::system::network_system::{add_netcode_network, server_network_sync, server_update_system, update_player_inputs_from_clients, ServerLobby};
-use server::system::player_system::{animate_sprite, move_player_system, update_grounded_system};
+use server::system::player_system::{move_player_system, players_animate, update_grounded_system, weapons_animate};
 
 fn main() {
     let mut app = App::new();
@@ -48,7 +48,8 @@ fn main() {
 
     app.add_systems(Update, (
         server_update_system,
-        animate_sprite,
+        players_animate,
+        weapons_animate
     ));
 
     app.add_systems(FixedUpdate, (

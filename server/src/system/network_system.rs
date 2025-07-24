@@ -1,5 +1,5 @@
 use bevy::app::App;
-use bevy::prelude::{info, Assets, ColorMaterial, Commands, Entity, EventReader, Mesh, Query, Res, ResMut, Resource, Sprite, TextureAtlasLayout, Transform, With};
+use bevy::prelude::{Assets, ColorMaterial, Commands, Entity, EventReader, Mesh, Query, Res, ResMut, Resource, Sprite, TextureAtlasLayout, Transform, With};
 use bevy_renet2::netcode::{NativeSocket, NetcodeServerPlugin, NetcodeServerTransport, ServerAuthentication, ServerSetupConfig};
 use bevy_renet2::prelude::{ClientId, RenetServer, ServerEvent};
 use game_core::entities::player::component::{PlayerInput, PlayerNetwork};
@@ -153,7 +153,6 @@ pub fn server_network_sync(
 ) {
     let mut networked_entities = NetworkedEntities::default();
     for (entity, transform, sprite, texture_entity_type) in query.iter() {
-        info!("Syncing entity: {:?} at {:?}", entity, transform.translation);
         networked_entities.entities.push(entity.to_bits());
         networked_entities.translations.push(transform.translation.into());
         if let Some(texture) = &sprite.texture_atlas {

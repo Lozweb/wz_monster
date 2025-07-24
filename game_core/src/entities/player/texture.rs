@@ -72,7 +72,7 @@ impl PlayerTextureEntity {
             PLAYER_FRAME_PADDING,
             |layout, player_texture, texture_path| PlayerTextureEntity {
                 texture_atlas_layout: layout,
-                animation_indices: AnimationIndices { first: 0, last: 0 },
+                animation_indices: AnimationIndices { first: 0, last: 3 },
                 texture_path,
                 player_texture_entity_type: player_texture,
             },
