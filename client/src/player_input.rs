@@ -3,7 +3,7 @@ use bevy_renet2::prelude::RenetClient;
 use game_core::entities::player::component::{ControlledPlayer, MainCamera, MouseWorldCoords, PlayerInput};
 use game_core::network::network_entities::ClientChannel;
 
-pub fn client_send_input(
+pub fn send_input(
     mut player_input: ResMut<PlayerInput>,
     keyboard_input: Res<ButtonInput<KeyCode>>,
     mut client: ResMut<RenetClient>,

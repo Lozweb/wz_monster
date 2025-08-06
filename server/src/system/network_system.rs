@@ -1,13 +1,13 @@
 use bevy::app::App;
+use bevy::math::Vec3;
 use bevy::prelude::{Assets, ColorMaterial, Commands, Entity, EventReader, Mesh, Query, Res, ResMut, Resource, Sprite, TextureAtlasLayout, Transform, With};
 use bevy_renet2::netcode::{NativeSocket, NetcodeServerPlugin, NetcodeServerTransport, ServerAuthentication, ServerSetupConfig};
 use bevy_renet2::prelude::{ClientId, RenetServer, ServerEvent};
-use game_core::entities::player::component::{PlayerInput, PlayerNetwork};
+use game_core::entities::player::component::{PlayerInput, PlayerNetwork, PlayerWeaponSelected};
 use game_core::entities::player::entity::{player_physics_bundle, spawn_player_entity, spawn_player_sensor};
-use game_core::entities::player::system::rand_spawn_player_position;
 use game_core::entities::player::texture::{rand_player_texture_entity_type, PlayerTextureEntityType, PlayerTextures};
 use game_core::entities::weapons::entity::spawn_weapon_entity;
-use game_core::entities::weapons::texture::{WeaponTextureEntityType, WeaponTextures};
+use game_core::entities::weapons::texture::WeaponTextures;
 use game_core::network::network_entities::{connection_config, ClientChannel, NetworkedEntities, ServerChannel, ServerMessages, PROTOCOL_ID};
 use renet2_visualizer::RenetServerVisualizer;
 use std::collections::HashMap;
@@ -41,7 +41,7 @@ pub fn add_netcode_network(app: &mut App) {
 }
 
 #[allow(clippy::too_many_arguments)]
-pub fn server_update_system(
+pub fn server_event(
     players: Query<(Entity, &PlayerNetwork, &Transform)>,
     mut player_textures: Res<PlayerTextures>,
     mut weapon_textures: Res<WeaponTextures>,
@@ -60,9 +60,9 @@ pub fn server_update_system(
                 println!("Client {client_id} connected");
                 visualizer.add_client(*client_id);
 
-                let position = rand_spawn_player_position();
+                let position = Vec3::new(fastrand::f32() * 800.0 - 400.0, 0.0, 0.0);
                 let player_texture_entity_type = rand_player_texture_entity_type();
-                let weapon_texture_entity_type = WeaponTextureEntityType::Pistol;
+                let weapon_texture_entity_type = PlayerWeaponSelected::default_weapon().weapon_entity_type;
 
                 for (entity, player, transform) in players.iter() {
                     let translation: [f32; 3] = transform.translation.into();
@@ -147,12 +147,20 @@ pub fn update_player_inputs_from_clients(
     }
 }
 
+#[allow(clippy::complexity)]
 pub fn server_network_sync(
     mut server: ResMut<RenetServer>,
-    query: Query<(Entity, &Transform, &Sprite, &PlayerTextureEntityType), With<PlayerNetwork>>,
+    player_query: Query<(
+        Entity,
+        &Transform,
+        &Sprite,
+        &PlayerTextureEntityType,
+        &PlayerWeaponSelected,
+        &PlayerInput
+    ), With<PlayerNetwork>>,
 ) {
     let mut networked_entities = NetworkedEntities::default();
-    for (entity, transform, sprite, texture_entity_type) in query.iter() {
+    for (entity, transform, sprite, texture_entity_type, player_weapon_selected, player_input) in player_query.iter() {
         networked_entities.entities.push(entity.to_bits());
         networked_entities.translations.push(transform.translation.into());
         if let Some(texture) = &sprite.texture_atlas {
@@ -160,7 +168,10 @@ pub fn server_network_sync(
             networked_entities.sprite_flip_x.push(sprite.flip_x);
             networked_entities.player_texture_entity_type.push(texture_entity_type.clone());
         }
+        networked_entities.weapon_texture_entity_type.push(player_weapon_selected.clone());
+        networked_entities.player_aim_direction.push(player_input.aim_direction);
     }
+
     if !networked_entities.entities.is_empty() {
         let sync_message = bincode::serialize(&networked_entities).unwrap();
         server.broadcast_message(ServerChannel::NetworkedEntities, sync_message);

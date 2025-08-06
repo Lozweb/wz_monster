@@ -4,10 +4,18 @@ use bevy_rapier2d::dynamics::Velocity;
 use bevy_rapier2d::pipeline::CollisionEvent;
 use game_core::entities::player::component::{AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput};
 use game_core::entities::weapons::component::{PivotDisk, Weapon};
-use game_core::entities::weapons::system::{is_face_right, radian_to_degrees, weapon_rotate_and_flip};
+use game_core::entities::weapons::system::{is_face_right, radian_to_degrees, weapon_sprite_flip};
 
 
-pub fn move_player_system(mut query: Query<(&Player, &PlayerInput, &mut Velocity, &Grounded, &mut JumpCounter)>) {
+pub fn player_move(
+    mut query: Query<(
+        &Player,
+        &PlayerInput,
+        &mut Velocity,
+        &Grounded,
+        &mut JumpCounter
+    )>
+) {
     for (player, input, mut velocity, grounded, mut jump_counter) in query.iter_mut() {
         let x_axis = -(input.left as i8) + input.right as i8;
         let mut move_delta = Vec2::new(x_axis as f32, 0.0);
@@ -25,7 +33,7 @@ pub fn move_player_system(mut query: Query<(&Player, &PlayerInput, &mut Velocity
     }
 }
 
-pub fn update_grounded_system(
+pub fn player_jump_control(
     mut collision_events: EventReader<CollisionEvent>,
     child_of: Query<&ChildOf>,
     mut grounded_query: Query<(&mut Grounded, &mut JumpCounter)>,
@@ -47,7 +55,7 @@ pub fn update_grounded_system(
     }
 }
 
-pub fn players_animate(
+pub fn animate_players(
     time: Res<Time>,
     player_query: Query<(&AnimationIndices, &mut AnimationTimer, &mut Sprite, &PlayerInput), With<Player>>,
 ) {
@@ -74,7 +82,7 @@ pub fn players_animate(
     }
 }
 
-pub fn weapons_animate(
+pub fn animate_weapons(
     player_query: Query<(&PlayerInput, &Children), With<Player>>,
     mut pivot_query: Query<(&Children, &mut Transform), With<PivotDisk>>,
     mut weapon_query: Query<&mut Sprite, With<Weapon>>,
@@ -86,7 +94,7 @@ pub fn weapons_animate(
 
                 for &weapon_entity in weapon.0.iter() {
                     if let Ok(mut weapon_sprite) = weapon_query.get_mut(weapon_entity) {
-                        weapon_rotate_and_flip(&mut weapon_sprite, input.aim_direction);
+                        weapon_sprite_flip(&mut weapon_sprite, input.aim_direction);
                     }
                 }
             }

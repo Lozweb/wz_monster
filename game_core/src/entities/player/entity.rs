@@ -1,4 +1,4 @@
-use crate::entities::player::component::{AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork};
+use crate::entities::player::component::{AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork, PlayerWeaponSelected};
 use crate::entities::player::texture::{player_texture_entity_to_handle, PlayerTextureEntity, PlayerTextureEntityType, PlayerTextures};
 use bevy::image::{TextureAtlas, TextureAtlasLayout};
 use bevy::math::Vec3;
@@ -36,6 +36,7 @@ pub fn spawn_player_entity(
         JumpCounter { jumps_left: 2, max_jumps: 2 },
         Transform::from_translation(position).with_scale(Vec3::splat(0.5)),
         GlobalTransform::default(),
+        PlayerWeaponSelected::default_weapon(),
         PlayerNetwork { id }
     )).insert(player_texture_entity_type.clone()).id()
 }

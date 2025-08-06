@@ -1,9 +1,8 @@
+use crate::entities::weapons::texture::WeaponTextureEntityType;
 use bevy::prelude::{Bundle, Component, Deref, Resource, Timer, Vec2};
 use bevy_rapier2d::prelude::{ActiveEvents, Sensor};
 use bevy_renet2::prelude::ClientId;
 use serde::{Deserialize, Serialize};
-
-pub const PLAYER_SPRITE: &str = "textures/player1.png";
 
 #[derive(Component)]
 pub struct ControlledPlayer;
@@ -69,6 +68,19 @@ impl Default for SensorBundle {
         Self {
             sensor: Sensor,
             active_events: ActiveEvents::COLLISION_EVENTS,
+        }
+    }
+}
+
+#[derive(Component, Debug, Serialize, Deserialize, Clone)]
+pub struct PlayerWeaponSelected {
+    pub weapon_entity_type: WeaponTextureEntityType,
+}
+
+impl PlayerWeaponSelected {
+    pub fn default_weapon() -> Self {
+        Self {
+            weapon_entity_type: WeaponTextureEntityType::Pistol,
         }
     }
 }

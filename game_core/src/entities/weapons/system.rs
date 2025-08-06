@@ -1,6 +1,6 @@
 use bevy::prelude::Sprite;
 
-pub fn weapon_rotate_and_flip(
+pub fn weapon_sprite_flip(
     weapon_sprite: &mut Sprite,
     aim_direction: f32,
 ) {
@@ -20,7 +20,7 @@ pub fn is_face_right(angle: f32) -> bool {
 pub fn radian_to_degrees(radians: f32) -> f32 {
     degrees_normalize(radians.to_degrees())
 }
-pub fn degrees_normalize(degrees: f32) -> f32 {
+fn degrees_normalize(degrees: f32) -> f32 {
     if degrees < 0.0 {
         degrees + 360.0
     } else {

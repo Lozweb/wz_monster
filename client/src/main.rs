@@ -3,14 +3,13 @@ use bevy::prelude::*;
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_renet2::prelude::RenetClientPlugin;
-use client::entities::player_input::{client_send_input, update_mouse_coords};
-use client::network::system::{client_sync_players, update_player_inputs_from_server};
+use client::network::system::{client_event, update_player_inputs_from_server};
 use client::network::{add_netcode_network, ClientLobby, Connected, NetworkMapping};
+use client::player_input::{send_input, update_mouse_coords};
 use game_core::entities::decor::system::setup_ground;
 use game_core::entities::player::component::{AimDirection, MainCamera, MouseWorldCoords, PlayerInput};
-use game_core::entities::player::system::weapon_rotation_with_mouse;
-use game_core::entities::player::texture::player_textures_system;
-use game_core::entities::weapons::texture::weapon_texture_system;
+use game_core::entities::player::texture::load_player_textures;
+use game_core::entities::weapons::texture::load_weapon_textures;
 
 fn main() {
     let mut app = App::new();
@@ -45,18 +44,20 @@ fn main() {
     add_netcode_network(&mut app);
 
     app.add_systems(Update, (
-        client_send_input,
-        client_sync_players,
-        update_player_inputs_from_server,
+        client_event,
+        send_input,
         update_mouse_coords,
-        weapon_rotation_with_mouse
+    ).in_set(Connected));
+
+    app.add_systems(FixedUpdate, (
+        update_player_inputs_from_server,
     ).in_set(Connected));
 
     app.add_systems(Startup, (
         setup_camera,
         setup_ground,
-        player_textures_system,
-        weapon_texture_system
+        load_player_textures,
+        load_weapon_textures
     ));
     app.run();
 }

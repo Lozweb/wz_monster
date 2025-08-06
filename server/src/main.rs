@@ -8,12 +8,12 @@ use bevy_rapier2d::plugin::{NoUserData, RapierPhysicsPlugin};
 use bevy_rapier2d::prelude::{CollisionEvent, RapierDebugRenderPlugin};
 use bevy_renet2::prelude::RenetServerPlugin;
 use game_core::entities::decor::system::setup_ground;
-use game_core::entities::player::texture::player_textures_system;
-use game_core::entities::weapons::texture::weapon_texture_system;
+use game_core::entities::player::texture::load_player_textures;
+use game_core::entities::weapons::texture::load_weapon_textures;
 use renet2_visualizer::RenetServerVisualizer;
 use server::system::decor_system::setup_camera;
-use server::system::network_system::{add_netcode_network, server_network_sync, server_update_system, update_player_inputs_from_clients, ServerLobby};
-use server::system::player_system::{move_player_system, players_animate, update_grounded_system, weapons_animate};
+use server::system::network_system::{add_netcode_network, server_event, server_network_sync, update_player_inputs_from_clients, ServerLobby};
+use server::system::player_system::{animate_players, animate_weapons, player_jump_control, player_move};
 
 fn main() {
     let mut app = App::new();
@@ -47,24 +47,24 @@ fn main() {
 
 
     app.add_systems(Update, (
-        server_update_system,
-        players_animate,
-        weapons_animate
+        server_event,
+        animate_players,
+        animate_weapons,
+        player_jump_control,
+        player_move,
     ));
 
     app.add_systems(FixedUpdate, (
-        update_grounded_system,
-        move_player_system,
         server_network_sync,
         update_player_inputs_from_clients,
     ));
 
 
     app.add_systems(Startup, (
+        load_player_textures,
+        load_weapon_textures,
         setup_camera,
         setup_ground,
-        player_textures_system,
-        weapon_texture_system
     ));
 
     app.run();

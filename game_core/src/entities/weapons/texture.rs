@@ -129,7 +129,7 @@ pub fn weapon_texture_entity_to_handle(
     (image, texture_atlas_layout)
 }
 
-pub fn weapon_texture_system(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn load_weapon_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
     let weapon_textures = WeaponTextures(
         WeaponTextureEntity::all()
             .into_iter()

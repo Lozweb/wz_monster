@@ -4652,6 +4652,7 @@ dependencies = [
  "bevy_rapier2d",
  "bevy_renet2",
  "bincode",
+ "fastrand",
  "game_core",
  "renet2_visualizer",
 ]

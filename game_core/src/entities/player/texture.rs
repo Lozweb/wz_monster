@@ -110,7 +110,7 @@ pub fn player_texture_entity_to_handle(
     (image, texture_atlas_layout)
 }
 
-pub fn player_textures_system(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn load_player_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
     let player_textures = PlayerTextures(
         PlayerTextureEntity::all()
             .into_iter()

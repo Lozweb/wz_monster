@@ -1,3 +1,4 @@
+use crate::entities::player::component::PlayerWeaponSelected;
 use crate::entities::player::texture::PlayerTextureEntityType;
 use crate::entities::weapons::texture::WeaponTextureEntityType;
 use bevy::prelude::Component;
@@ -36,6 +37,8 @@ pub struct NetworkedEntities {
     pub sprite_index: Vec<usize>,
     pub sprite_flip_x: Vec<bool>,
     pub player_texture_entity_type: Vec<PlayerTextureEntityType>,
+    pub weapon_texture_entity_type: Vec<PlayerWeaponSelected>,
+    pub player_aim_direction: Vec<f32>,
 }
 
 impl From<ClientChannel> for u8 {

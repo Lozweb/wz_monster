@@ -2,18 +2,20 @@ use crate::network::{ClientLobby, CurrentClientId, NetworkMapping, PlayerInfo};
 use bevy::asset::Assets;
 
 use bevy::image::{TextureAtlas, TextureAtlasLayout};
-use bevy::math::Vec3;
-use bevy::prelude::{info, ColorMaterial, Commands, Entity, Mesh, Res, ResMut, Sprite, Transform};
+use bevy::math::{Quat, Vec3};
+use bevy::prelude::{info, Children, ColorMaterial, Commands, Entity, Mesh, Query, Res, ResMut, Sprite, Transform, With};
 use bevy_renet2::prelude::RenetClient;
-use game_core::entities::player::component::ControlledPlayer;
+use game_core::entities::player::component::{ControlledPlayer, PlayerNetwork};
 use game_core::entities::player::entity::spawn_player_entity;
 use game_core::entities::player::texture::{player_texture_entity_to_handle, PlayerTextureEntity, PlayerTextureEntityType, PlayerTextures};
+use game_core::entities::weapons::component::{PivotDisk, Weapon};
 use game_core::entities::weapons::entity::spawn_weapon_entity;
+use game_core::entities::weapons::system::weapon_sprite_flip;
 use game_core::entities::weapons::texture::WeaponTextures;
 use game_core::network::network_entities::{NetworkedEntities, ServerChannel, ServerMessages};
 
 #[allow(clippy::too_many_arguments)]
-pub fn client_sync_players(
+pub fn client_event(
     mut player_textures: Res<PlayerTextures>,
     mut weapon_textures: Res<WeaponTextures>,
     client_id: Res<CurrentClientId>,
@@ -82,12 +84,16 @@ pub fn client_sync_players(
         }
     }
 }
+#[allow(clippy::too_many_arguments)]
 pub fn update_player_inputs_from_server(
     mut commands: Commands,
     mut client: ResMut<RenetClient>,
     network_mapping: ResMut<NetworkMapping>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     player_textures: Res<PlayerTextures>,
+    player_query: Query<&Children, With<PlayerNetwork>>,
+    mut disk_query: Query<(&mut Transform, &Children), With<PivotDisk>>,
+    mut weapon_query: Query<&mut Sprite, With<Weapon>>,
 ) {
     while let Some(message) = client.receive_message(ServerChannel::NetworkedEntities) {
         let networked_entities: NetworkedEntities = bincode::deserialize(&message).unwrap();
@@ -104,10 +110,24 @@ pub fn update_player_inputs_from_server(
                     &mut texture_atlas_layouts,
                     &player_textures,
                 );
+
+                if let Ok(children) = player_query.get(*entity) {
+                    for &child in children.iter() {
+                        if let Ok((mut transform, weapon_children)) = disk_query.get_mut(child) {
+                            transform.rotation = Quat::from_rotation_z(networked_entities.player_aim_direction[i]);
+                            for &weapon_entity in weapon_children.iter() {
+                                if let Ok(mut weapon_sprite) = weapon_query.get_mut(weapon_entity) {
+                                    weapon_sprite_flip(&mut weapon_sprite, networked_entities.player_aim_direction[i]);
+                                }
+                            }
+                        }
+                    }
+                }
             }
         }
     }
 }
+
 
 #[allow(clippy::too_many_arguments)]
 fn animate_player(
