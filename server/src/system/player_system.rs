@@ -1,9 +1,12 @@
-use bevy::math::Vec2;
-use bevy::prelude::{ChildOf, Children, EventReader, Quat, Query, Res, Sprite, Time, Transform, With};
+use bevy::asset::Assets;
+use bevy::image::TextureAtlasLayout;
+use bevy::math::{Vec2, Vec3};
+use bevy::prelude::{ChildOf, Children, Commands, ContainsEntity, EventReader, GlobalTransform, Quat, Query, Res, ResMut, Sprite, Time, Transform, With};
 use bevy_rapier2d::dynamics::Velocity;
 use bevy_rapier2d::pipeline::CollisionEvent;
-use game_core::entities::player::component::{AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput};
+use game_core::entities::player::component::{spawn_weapon_fx, AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput, PlayerNetwork, PlayerWeaponSelected};
 use game_core::entities::player::system::{is_face_right, radian_to_degrees, weapon_sprite_flip};
+use game_core::entities::player::weapon_fx_texture::{WeaponFxTextureEntityType, WeaponFxTextures};
 use game_core::entities::player::weapon_texture::{PivotDisk, Weapon};
 
 pub fn player_move(
@@ -98,6 +101,42 @@ pub fn animate_weapons(
                 for &weapon_entity in weapon.0.iter() {
                     if let Ok(mut weapon_sprite) = weapon_query.get_mut(weapon_entity) {
                         weapon_sprite_flip(&mut weapon_sprite, input.aim_direction);
+                    }
+                }
+            }
+        }
+    }
+}
+pub fn player_shoot(
+    mut commands: Commands,
+    mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
+    mut weapon_fx_textures: Res<WeaponFxTextures>,
+    player_query: Query<(&PlayerInput, &PlayerWeaponSelected, &Children, &PlayerNetwork), With<Player>>,
+    pivot_disk_query: Query<&Children, With<PivotDisk>>,
+    weapon_query: Query<&GlobalTransform, With<Weapon>>,
+) {
+    for (player_input, player_weapon_selected, children, player_network) in player_query.iter() {
+        if player_input.shoot {
+            for children in children.iter() {
+                if let Ok(pivot_children) = pivot_disk_query.get(children.entity()) {
+                    if let Some(weapon_entity) = pivot_children.first() {
+                        if let Ok(global_transform) = weapon_query.get(*weapon_entity) {
+                            let offset = Vec3::new(32.5, 0.0, 0.0);
+                            let position = global_transform.translation() + if is_face_right(radian_to_degrees(player_input.aim_direction)) {
+                                offset
+                            } else {
+                                -offset
+                            };
+                            spawn_weapon_fx(
+                                &mut commands,
+                                &mut texture_atlas_layouts,
+                                &mut weapon_fx_textures,
+                                position,
+                                &WeaponFxTextureEntityType::from(&player_weapon_selected.weapon_entity_type),
+                                player_input.aim_direction,
+                                player_network.id,
+                            );
+                        }
                     }
                 }
             }

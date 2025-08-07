@@ -1,12 +1,14 @@
 use crate::entities::player::player_texture::{player_texture_entity_to_handle, PlayerTextureEntity, PlayerTextureEntityType, PlayerTextures};
+use crate::entities::player::system::{is_face_right, radian_to_degrees};
+use crate::entities::player::weapon_fx_texture::{weapon_texture_fx_entity_to_handle, FxComponent, WeaponFxTextureEntity, WeaponFxTextureEntityType, WeaponFxTextures, PISTOL_FX_SIZE};
 use crate::entities::player::weapon_texture::{weapon_texture_entity_to_handle, PivotDisk, Weapon, WeaponTextureEntity, WeaponTextureEntityType, WeaponTextures};
 use bevy::asset::Assets;
 use bevy::color::Color;
 use bevy::image::{TextureAtlas, TextureAtlasLayout};
-use bevy::math::Vec3;
-use bevy::prelude::{Bundle, Circle, ColorMaterial, Commands, Component, Deref, Entity, GlobalTransform, Mesh, Mesh2d, MeshMaterial2d, Name, Res, ResMut, Resource, Sprite, Timer, TimerMode, Transform, Vec2};
+use bevy::math::{Quat, Vec3};
+use bevy::prelude::{Bundle, Circle, ColorMaterial, Commands, Component, Deref, Entity, GlobalTransform, Mesh, Mesh2d, MeshMaterial2d, Name, Query, Res, ResMut, Resource, Sprite, Timer, TimerMode, Transform, Vec2, With};
 use bevy_rapier2d::dynamics::{GravityScale, LockedAxes, RigidBody, Velocity};
-use bevy_rapier2d::geometry::{Collider, Friction};
+use bevy_rapier2d::geometry::{Collider, CollisionGroups, Friction, Group};
 use bevy_rapier2d::prelude::{ActiveEvents, Sensor};
 use bevy_renet2::prelude::ClientId;
 use serde::{Deserialize, Serialize};
@@ -198,4 +200,82 @@ pub fn spawn_weapon_entity(
     )).id();
 
     (disk_entity, weapon_entity)
+}
+
+pub fn spawn_weapon_fx(
+    commands: &mut Commands,
+    texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
+    weapon_fx_textures: &mut Res<WeaponFxTextures>,
+    position: Vec3,
+    weapon_fx_texture_entity_type: &WeaponFxTextureEntityType,
+    aim_direction: f32,
+    client_id: ClientId,
+) -> Entity {
+    let weapon_fx_texture = WeaponFxTextureEntity::new(weapon_fx_texture_entity_type);
+    let (image, layout) =
+        weapon_texture_fx_entity_to_handle(&weapon_fx_texture.weapon_fx_texture_entity_type, &mut *texture_atlas_layouts, weapon_fx_textures);
+    let is_face_right = is_face_right(radian_to_degrees(aim_direction));
+
+    commands.spawn((
+        FxComponent,
+        Sprite {
+            flip_y: !is_face_right,
+            ..Sprite::from_atlas_image(
+                image,
+                TextureAtlas {
+                    layout,
+                    index: weapon_fx_texture.animation_indices.first as usize,
+                },
+            )
+        },
+        weapon_fx_texture.animation_indices,
+        AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
+        Transform::from_translation(position)
+            .with_scale(Vec3::splat(1.))
+            .with_rotation(Quat::from_rotation_z(aim_direction)),
+        GlobalTransform::default(),
+    )).insert(spawn_weapon_fx_physics_bundle(aim_direction, client_id)).id()
+}
+
+const WEAPON_FX_SPEED: f32 = 1000.0;
+
+pub fn spawn_weapon_fx_physics_bundle(
+    aim_direction: f32,
+    ignore_player_group: ClientId,
+) -> (
+    Name,
+    RigidBody,
+    LockedAxes,
+    Velocity,
+    Collider,
+    GravityScale,
+    Friction,
+    CollisionGroups,
+) {
+    (
+        Name::new("WeaponFX Physics"),
+        RigidBody::Dynamic,
+        LockedAxes::ROTATION_LOCKED,
+        Velocity::linear(Vec2::new(aim_direction.cos() * WEAPON_FX_SPEED, aim_direction.sin() * WEAPON_FX_SPEED)),
+        Collider::ball((PISTOL_FX_SIZE.y / 2) as f32),
+        GravityScale(0.0),
+        Friction::coefficient(0.0),
+        CollisionGroups::new(
+            Group::from_bits_truncate(!ignore_player_group as u32),
+            Group::from_bits_truncate(u32::MAX),
+        ),
+    )
+}
+
+pub fn despawn_weapon_fx_out_of_screen_system(
+    mut commands: Commands,
+    query: Query<(Entity, &Transform), With<FxComponent>>,
+) {
+    let max_distance: f32 = 500.0;
+    for (entity, transform) in query.iter() {
+        let distance = transform.translation.length();
+        if distance > max_distance {
+            commands.entity(entity).despawn();
+        }
+    }
 }

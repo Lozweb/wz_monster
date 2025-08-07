@@ -1,6 +1,7 @@
 use bevy::app::App;
 use bevy::math::Vec3;
 use bevy::prelude::{Assets, ColorMaterial, Commands, Entity, EventReader, Mesh, Query, Res, ResMut, Resource, Sprite, TextureAtlasLayout, Transform, With};
+use bevy_rapier2d::prelude::Group;
 use bevy_renet2::netcode::{NativeSocket, NetcodeServerPlugin, NetcodeServerTransport, ServerAuthentication, ServerSetupConfig};
 use bevy_renet2::prelude::{ClientId, RenetServer, ServerEvent};
 use game_core::entities::player::component::{player_physics_bundle, spawn_player_entity, spawn_player_sensor, spawn_weapon_entity, PlayerInput, PlayerNetwork, PlayerWeaponSelected};
@@ -82,6 +83,8 @@ pub fn server_event(
                     &player_texture_entity_type,
                     *client_id,
                 );
+                let collision_group = Group::from_bits_truncate(*client_id as u32);
+                commands.entity(player_entity).insert(collision_group);
 
                 commands.entity(player_entity).insert(player_physics_bundle());
 

@@ -1,4 +1,5 @@
 use crate::entities::player::component::AnimationIndices;
+use crate::entities::player::weapon_texture::WeaponTextureEntityType;
 use crate::entities::texture::{load_textures, texture_entity_to_handle, TextureHandleMap};
 use crate::entities::texture::{texture, HasTextureEntityType};
 use crate::make_weapon_fx_texture;
@@ -9,7 +10,10 @@ use bevy::prelude::{Commands, Component, Res, ResMut, Resource};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-pub const WEAPONS_FX: &str = "textures/weapons/texture.png";
+pub const WEAPONS_FX: &str = "textures/weapons/weapons_fx.png";
+
+#[derive(Component)]
+pub struct FxComponent;
 
 #[derive(Resource, Clone)]
 pub struct WeaponFxTextures(pub HashMap<WeaponFxTextureEntityType, Handle<Image>>);
@@ -29,6 +33,16 @@ pub enum WeaponFxTextureEntityType {
     GrenadeLauncher,
 }
 
+impl From<&WeaponTextureEntityType> for WeaponFxTextureEntityType {
+    fn from(value: &WeaponTextureEntityType) -> Self {
+        match value {
+            WeaponTextureEntityType::Pistol => WeaponFxTextureEntityType::Pistol,
+            WeaponTextureEntityType::Shotgun => WeaponFxTextureEntityType::Shotgun,
+            WeaponTextureEntityType::Rifle => WeaponFxTextureEntityType::Rifle,
+            WeaponTextureEntityType::GrenadeLauncher => WeaponFxTextureEntityType::GrenadeLauncher,
+        }
+    }
+}
 pub struct WeaponFxTextureEntity {
     pub texture_atlas_layout: TextureAtlasLayout,
     pub animation_indices: AnimationIndices,
@@ -41,8 +55,8 @@ const WEAPON_FX_LAYOUT_SIZE: UVec2 = UVec2::new(1300, 3175);
 const WEAPON_FX_FRAME_PADDING: u32 = 0;
 const WEAPON_FX_FRAME_COUNT: u32 = 1;
 
-const PISTOL_FX_SIZE: UVec2 = UVec2::new(11, 23);
-const PISTOL_FX_START_MIN: UVec2 = UVec2::new(4, 2433);
+pub const PISTOL_FX_SIZE: UVec2 = UVec2::new(31, 15);
+const PISTOL_FX_START_MIN: UVec2 = UVec2::new(3, 2431);
 impl WeaponFxTextureEntity {
     pub fn new(weapon_texture: &WeaponFxTextureEntityType) -> Self {
         match weapon_texture {
@@ -89,7 +103,7 @@ impl HasTextureEntityType<WeaponFxTextureEntityType> for WeaponFxTextureEntity {
     }
 }
 
-pub fn weapon_texture_entity_to_handle(
+pub fn weapon_texture_fx_entity_to_handle(
     weapon_fx_texture_type: &WeaponFxTextureEntityType,
     texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
     weapon_textures: &Res<WeaponFxTextures>,
@@ -103,7 +117,7 @@ pub fn weapon_texture_entity_to_handle(
     )
 }
 
-pub fn load_weapon_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
+pub fn load_weapon_fx_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
     load_textures(
         &mut commands,
         &asset_server,
