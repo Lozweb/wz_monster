@@ -1,6 +1,6 @@
 use crate::entities::player::component::PlayerWeaponSelected;
-use crate::entities::player::texture::PlayerTextureEntityType;
-use crate::entities::weapons::texture::WeaponTextureEntityType;
+use crate::entities::player::player_texture::PlayerTextureEntityType;
+use crate::entities::player::weapon_texture::WeaponTextureEntityType;
 use bevy::prelude::Component;
 use bevy_renet2::prelude::{ChannelConfig, ClientId, ConnectionConfig, SendType};
 use serde::{Deserialize, Serialize};

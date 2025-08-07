@@ -1,4 +1,6 @@
 pub mod component;
-pub mod texture;
-pub mod entity;
+pub mod player_texture;
+pub mod weapon_fx_texture;
+pub mod weapon_texture;
+pub mod system;
 

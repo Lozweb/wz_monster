@@ -3,9 +3,8 @@ use bevy::prelude::{ChildOf, Children, EventReader, Quat, Query, Res, Sprite, Ti
 use bevy_rapier2d::dynamics::Velocity;
 use bevy_rapier2d::pipeline::CollisionEvent;
 use game_core::entities::player::component::{AnimationIndices, AnimationTimer, Grounded, JumpCounter, Player, PlayerInput};
-use game_core::entities::weapons::component::{PivotDisk, Weapon};
-use game_core::entities::weapons::system::{is_face_right, radian_to_degrees, weapon_sprite_flip};
-
+use game_core::entities::player::system::{is_face_right, radian_to_degrees, weapon_sprite_flip};
+use game_core::entities::player::weapon_texture::{PivotDisk, Weapon};
 
 pub fn player_move(
     mut query: Query<(
@@ -67,15 +66,15 @@ pub fn animate_players(
             if timer.0.just_finished() {
                 if let Some(atlas) = &mut sprite.texture_atlas {
                     atlas.index = match (atlas.index, face_right) {
-                        (index, _) if index >= indices.last => indices.first,
+                        (index, _) if index >= indices.last as usize => indices.first as usize,
                         (index, true) => index + 1,
-                        (0, false) => indices.last,
+                        (0, false) => indices.last as usize,
                         (index, false) => index - 1,
                     };
                 }
             }
         } else if let Some(atlas) = &mut sprite.texture_atlas {
-            atlas.index = indices.first;
+            atlas.index = indices.first as usize;
         }
 
         sprite.flip_x = face_right;
@@ -91,7 +90,11 @@ pub fn animate_weapons(
         for &pivot_entity in player_children.iter() {
             if let Ok(mut weapon) = pivot_query.get_mut(pivot_entity) {
                 weapon.1.rotation = Quat::from_rotation_z(input.aim_direction);
-
+                if is_face_right(radian_to_degrees(input.aim_direction)) {
+                    weapon.1.translation.x = -2.5;
+                } else {
+                    weapon.1.translation.x = 2.5;
+                }
                 for &weapon_entity in weapon.0.iter() {
                     if let Ok(mut weapon_sprite) = weapon_query.get_mut(weapon_entity) {
                         weapon_sprite_flip(&mut weapon_sprite, input.aim_direction);

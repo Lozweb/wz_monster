@@ -5,13 +5,10 @@ use bevy::image::{TextureAtlas, TextureAtlasLayout};
 use bevy::math::{Quat, Vec3};
 use bevy::prelude::{info, Children, ColorMaterial, Commands, Entity, Mesh, Query, Res, ResMut, Sprite, Transform, With};
 use bevy_renet2::prelude::RenetClient;
-use game_core::entities::player::component::{ControlledPlayer, PlayerNetwork};
-use game_core::entities::player::entity::spawn_player_entity;
-use game_core::entities::player::texture::{player_texture_entity_to_handle, PlayerTextureEntity, PlayerTextureEntityType, PlayerTextures};
-use game_core::entities::weapons::component::{PivotDisk, Weapon};
-use game_core::entities::weapons::entity::spawn_weapon_entity;
-use game_core::entities::weapons::system::weapon_sprite_flip;
-use game_core::entities::weapons::texture::WeaponTextures;
+use game_core::entities::player::component::{spawn_player_entity, spawn_weapon_entity, ControlledPlayer, PlayerNetwork};
+use game_core::entities::player::player_texture::{player_texture_entity_to_handle, PlayerTextureEntity, PlayerTextureEntityType, PlayerTextures};
+use game_core::entities::player::system::{is_face_right, radian_to_degrees, weapon_sprite_flip};
+use game_core::entities::player::weapon_texture::{PivotDisk, Weapon, WeaponTextures};
 use game_core::network::network_entities::{NetworkedEntities, ServerChannel, ServerMessages};
 
 #[allow(clippy::too_many_arguments)]
@@ -114,10 +111,16 @@ pub fn update_player_inputs_from_server(
                 if let Ok(children) = player_query.get(*entity) {
                     for &child in children.iter() {
                         if let Ok((mut transform, weapon_children)) = disk_query.get_mut(child) {
-                            transform.rotation = Quat::from_rotation_z(networked_entities.player_aim_direction[i]);
+                            let aim_direction = networked_entities.player_aim_direction[i];
+                            transform.rotation = Quat::from_rotation_z(aim_direction);
+                            if is_face_right(radian_to_degrees(aim_direction)) {
+                                transform.translation.x = -2.5;
+                            } else {
+                                transform.translation.x = 2.5;
+                            }
                             for &weapon_entity in weapon_children.iter() {
                                 if let Ok(mut weapon_sprite) = weapon_query.get_mut(weapon_entity) {
-                                    weapon_sprite_flip(&mut weapon_sprite, networked_entities.player_aim_direction[i]);
+                                    weapon_sprite_flip(&mut weapon_sprite, aim_direction);
                                 }
                             }
                         }

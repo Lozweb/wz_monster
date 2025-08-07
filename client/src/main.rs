@@ -8,8 +8,8 @@ use client::network::{add_netcode_network, ClientLobby, Connected, NetworkMappin
 use client::player_input::{send_input, update_mouse_coords};
 use game_core::entities::decor::system::setup_ground;
 use game_core::entities::player::component::{AimDirection, MainCamera, MouseWorldCoords, PlayerInput};
-use game_core::entities::player::texture::load_player_textures;
-use game_core::entities::weapons::texture::load_weapon_textures;
+use game_core::entities::player::player_texture::load_player_textures;
+use game_core::entities::player::weapon_texture::load_weapon_textures;
 
 fn main() {
     let mut app = App::new();

@@ -1,12 +1,13 @@
 use crate::entities::player::component::AnimationIndices;
 use crate::entities::texture::texture;
+use crate::entities::texture::{load_textures, texture_entity_to_handle, HasTextureEntityType};
+use crate::make_player_texture;
 use bevy::asset::Handle;
 use bevy::image::{Image, TextureAtlasLayout};
-use bevy::log::error;
 use bevy::math::UVec2;
-use bevy::platform::collections::HashMap;
 use bevy::prelude::{AssetServer, Assets, Commands, Component, Res, ResMut, Resource};
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 pub const RICK_1: &str = "textures/players/rick1.png";
 pub const RICK_2: &str = "textures/players/rick2.png";
@@ -33,50 +34,35 @@ pub struct PlayerTextureEntity {
     pub texture_path: String,
     pub player_texture_entity_type: PlayerTextureEntityType,
 }
+
+const RICK_1_LAYOUT_SIZE: UVec2 = UVec2::new(1036, 740);
+const RICK_2_LAYOUT_SIZE: UVec2 = UVec2::new(816, 1241);
 const PLAYER_FRAME_PADDING: u32 = 14;
 const PLAYER_FRAME_SIZE: UVec2 = UVec2::new(117, 160);
 const PLAYER_FRAME_COUNT: u32 = 4;
 
+const RICK_1_START_MIN: UVec2 = UVec2::new(519, 173);
+const RICK_2_START_MIN: UVec2 = UVec2::new(5, 908);
+
 impl PlayerTextureEntity {
     pub fn new(player_texture: &PlayerTextureEntityType) -> Self {
         match player_texture {
-            PlayerTextureEntityType::Rick1 => {
-                Self::make_player_texture(
-                    UVec2::new(1036, 740),
-                    UVec2::new(519, 173),
-                    PlayerTextureEntityType::Rick1,
-                )
-            }
-            PlayerTextureEntityType::Rick2 => {
-                Self::make_player_texture(
-                    UVec2::new(816, 1241),
-                    UVec2::new(5, 908),
-                    PlayerTextureEntityType::Rick2,
-                )
-            }
-        }
-    }
+            PlayerTextureEntityType::Rick1 => make_player_texture!(
+                PlayerTextureEntityType::Rick1,
+                RICK_1_LAYOUT_SIZE,
+                RICK_1,
+                RICK_1_START_MIN,
+                PLAYER_FRAME_SIZE
+            ),
 
-    fn make_player_texture(
-        layout_size: UVec2,
-        start_min: UVec2,
-        player_texture_entity_type: PlayerTextureEntityType,
-    ) -> PlayerTextureEntity {
-        texture(
-            layout_size,
-            start_min,
-            RICK_2,
-            player_texture_entity_type,
-            PLAYER_FRAME_COUNT,
-            PLAYER_FRAME_SIZE,
-            PLAYER_FRAME_PADDING,
-            |layout, player_texture, texture_path| PlayerTextureEntity {
-                texture_atlas_layout: layout,
-                animation_indices: AnimationIndices { first: 0, last: 3 },
-                texture_path,
-                player_texture_entity_type: player_texture,
-            },
-        )
+            PlayerTextureEntityType::Rick2 => make_player_texture!(
+                PlayerTextureEntityType::Rick2,
+                RICK_2_LAYOUT_SIZE,
+                RICK_2,
+                RICK_2_START_MIN,
+                PLAYER_FRAME_SIZE
+            ),
+        }
     }
 
     pub fn all() -> Vec<(PlayerTextureEntityType, &'static str)> {
@@ -94,29 +80,34 @@ pub fn rand_player_texture_entity_type() -> PlayerTextureEntityType {
         PlayerTextureEntityType::Rick2
     }
 }
+impl HasTextureEntityType<PlayerTextureEntityType> for PlayerTextureEntity {
+    fn texture_atlas_layout(&self) -> TextureAtlasLayout {
+        self.texture_atlas_layout.clone()
+    }
+    fn texture_entity_type(&self) -> PlayerTextureEntityType {
+        self.player_texture_entity_type.clone()
+    }
+}
 
 pub fn player_texture_entity_to_handle(
     texture_entity_type: &PlayerTextureEntityType,
     texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
     player_textures: &Res<PlayerTextures>,
 ) -> (Handle<Image>, Handle<TextureAtlasLayout>) {
-    let texture_entity = PlayerTextureEntity::new(&texture_entity_type.clone());
-    let texture_atlas_layout = texture_atlas_layouts.add(texture_entity.texture_atlas_layout);
-    let Some(image) = player_textures.get_handle(texture_entity.player_texture_entity_type) else {
-        error!("Failed to get player texture for");
-        return (Handle::default(), Handle::default());
-    };
-
-    (image, texture_atlas_layout)
+    texture_entity_to_handle(
+        texture_entity_type,
+        texture_atlas_layouts,
+        player_textures,
+        PlayerTextureEntity::new,
+        PlayerTextures::get_handle,
+    )
 }
 
 pub fn load_player_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
-    let player_textures = PlayerTextures(
-        PlayerTextureEntity::all()
-            .into_iter()
-            .map(|(texture_type, path)| (texture_type, asset_server.load(path)))
-            .collect()
+    load_textures(
+        &mut commands,
+        &asset_server,
+        PlayerTextureEntity::all,
+        PlayerTextures,
     );
-
-    commands.insert_resource(player_textures);
 }
