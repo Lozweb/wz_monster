@@ -1,7 +1,7 @@
 use bevy::prelude::*;
 use bevy_renet2::prelude::RenetClient;
-use game_core::entities::player::component::{ControlledPlayer, MainCamera, MouseWorldCoords, PlayerInput};
-use game_core::network::network_entities::ClientChannel;
+use game_core::network::network::ClientChannel;
+use game_core::player::component::{ControlledPlayer, MouseWorldCoords, PlayerInput};
 
 const UP: [KeyCode; 2] = [KeyCode::KeyW, KeyCode::ArrowUp];
 const DOWN: [KeyCode; 2] = [KeyCode::KeyS, KeyCode::ArrowDown];
@@ -24,11 +24,19 @@ pub fn send_input(
     player_input.jump = keyboard_input.just_pressed(JUMP);
     player_input.shoot = mouse_input.just_pressed(SHOOT);
 
-    if player_input.is_changed() {
-        let input_message = bincode::serialize(&*player_input).unwrap();
-        client.send_message(ClientChannel::Input, input_message);
-    }
+    let input_message = match bincode::serialize(&*player_input) {
+        Ok(msg) => msg,
+        Err(e) => {
+            error!("Erreur de sérialisation de PlayerInput: {:?}", e);
+            return;
+        }
+    };
+    client.send_message(ClientChannel::Input, input_message);
 }
+
+
+#[derive(Component)]
+pub struct MainCamera;
 
 pub fn update_mouse_coords(
     camera: Single<(&Camera, &GlobalTransform), With<MainCamera>>,
@@ -51,9 +59,13 @@ pub fn update_mouse_coords(
         .unwrap_or_default();
 
     let dir = mouse_world_coords.0.unwrap_or_default() - player_pos;
+
     if dir != Vec2::ZERO {
         player_input.aim_direction = dir.y.atan2(dir.x);
-        let input_message = bincode::serialize(&*player_input).unwrap();
-        client.send_message(ClientChannel::Input, input_message);
+
+        match bincode::serialize(&*player_input) {
+            Ok(input_message) => client.send_message(ClientChannel::Input, input_message),
+            Err(e) => error!("Erreur de sérialisation de PlayerInput: {:?}", e),
+        }
     }
 }

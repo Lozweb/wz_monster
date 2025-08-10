@@ -1,12 +1,12 @@
-use crate::entities::player::component::AnimationIndices;
-use crate::entities::player::weapon_texture::WeaponTextureEntityType;
-use crate::entities::texture::{load_textures, texture_entity_to_handle, TextureHandleMap};
-use crate::entities::texture::{texture, HasTextureEntityType};
 use crate::make_weapon_fx_texture;
-use bevy::asset::{AssetServer, Assets, Handle};
+use crate::player::component::AnimationIndices;
+use crate::texture::entity::{HasTextureEntityType, TextureHandleMap};
+use crate::texture::system::texture;
+use crate::weapon::texture::WeaponTextureType;
+use bevy::asset::Handle;
 use bevy::image::{Image, TextureAtlasLayout};
 use bevy::math::UVec2;
-use bevy::prelude::{Commands, Component, Res, ResMut, Resource};
+use bevy::prelude::{Component, Resource};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -33,13 +33,13 @@ pub enum WeaponFxTextureEntityType {
     GrenadeLauncher,
 }
 
-impl From<&WeaponTextureEntityType> for WeaponFxTextureEntityType {
-    fn from(value: &WeaponTextureEntityType) -> Self {
+impl From<&WeaponTextureType> for WeaponFxTextureEntityType {
+    fn from(value: &WeaponTextureType) -> Self {
         match value {
-            WeaponTextureEntityType::Pistol => WeaponFxTextureEntityType::Pistol,
-            WeaponTextureEntityType::Shotgun => WeaponFxTextureEntityType::Shotgun,
-            WeaponTextureEntityType::Rifle => WeaponFxTextureEntityType::Rifle,
-            WeaponTextureEntityType::GrenadeLauncher => WeaponFxTextureEntityType::GrenadeLauncher,
+            WeaponTextureType::Pistol => WeaponFxTextureEntityType::Pistol,
+            WeaponTextureType::Shotgun => WeaponFxTextureEntityType::Shotgun,
+            WeaponTextureType::Rifle => WeaponFxTextureEntityType::Rifle,
+            WeaponTextureType::GrenadeLauncher => WeaponFxTextureEntityType::GrenadeLauncher,
         }
     }
 }
@@ -47,7 +47,7 @@ pub struct WeaponFxTextureEntity {
     pub texture_atlas_layout: TextureAtlasLayout,
     pub animation_indices: AnimationIndices,
     pub texture_path: String,
-    pub weapon_fx_texture_entity_type: WeaponFxTextureEntityType,
+    pub weapon_fx_texture_type: WeaponFxTextureEntityType,
 }
 
 
@@ -99,29 +99,6 @@ impl HasTextureEntityType<WeaponFxTextureEntityType> for WeaponFxTextureEntity {
     }
 
     fn texture_entity_type(&self) -> WeaponFxTextureEntityType {
-        self.weapon_fx_texture_entity_type.clone()
+        self.weapon_fx_texture_type.clone()
     }
-}
-
-pub fn weapon_texture_fx_entity_to_handle(
-    weapon_fx_texture_type: &WeaponFxTextureEntityType,
-    texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
-    weapon_textures: &Res<WeaponFxTextures>,
-) -> (Handle<Image>, Handle<TextureAtlasLayout>) {
-    texture_entity_to_handle(
-        weapon_fx_texture_type,
-        texture_atlas_layouts,
-        weapon_textures,
-        WeaponFxTextureEntity::new,
-        WeaponFxTextures::get_handle,
-    )
-}
-
-pub fn load_weapon_fx_textures(mut commands: Commands, asset_server: Res<AssetServer>) {
-    load_textures(
-        &mut commands,
-        &asset_server,
-        WeaponFxTextureEntity::all,
-        WeaponFxTextures,
-    );
 }

@@ -1,4 +1,4 @@
-use crate::entities::decor::component::Ground;
+use crate::decor::component::Ground;
 use bevy::prelude::{Assets, Color, ColorMaterial, Commands, GlobalTransform, Mesh, Mesh2d, MeshMaterial2d, Rectangle, ResMut, Transform, Vec2};
 use bevy_rapier2d::prelude::{Collider, RigidBody};
 

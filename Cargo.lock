@@ -1768,7 +1768,6 @@ dependencies = [
  "bevy_renet2",
  "bincode",
  "game_core",
- "renet2_visualizer",
 ]
 
 [[package]]
@@ -4654,6 +4653,7 @@ dependencies = [
  "bincode",
  "fastrand",
  "game_core",
+ "log",
  "renet2_visualizer",
 ]
 

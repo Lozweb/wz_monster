@@ -1,20 +1,12 @@
-use bevy::app::{FixedUpdate, PluginGroup, Startup};
-use bevy::prelude::{default, App, AssetPlugin, Events, ImagePlugin, Update, Window, WindowPlugin};
+use bevy::app::PluginGroup;
+use bevy::prelude::{default, App, AssetPlugin, ImagePlugin, Window, WindowPlugin};
 use bevy::DefaultPlugins;
 use bevy_egui::EguiPlugin;
 use bevy_inspector_egui::quick::WorldInspectorPlugin;
 use bevy_rapier2d::plugin::{NoUserData, RapierPhysicsPlugin};
-use bevy_rapier2d::prelude::{CollisionEvent, RapierDebugRenderPlugin};
+use bevy_rapier2d::prelude::RapierDebugRenderPlugin;
 use bevy_renet2::prelude::RenetServerPlugin;
-use game_core::entities::decor::system::setup_ground;
-use game_core::entities::player::component::despawn_weapon_fx_out_of_screen_system;
-use game_core::entities::player::player_texture::load_player_textures;
-use game_core::entities::player::weapon_fx_texture::load_weapon_fx_textures;
-use game_core::entities::player::weapon_texture::load_weapon_textures;
-use renet2_visualizer::RenetServerVisualizer;
-use server::system::decor_system::setup_camera;
-use server::system::network_system::{add_netcode_network, server_event, server_network_sync, update_player_inputs_from_clients, ServerLobby};
-use server::system::player_system::{animate_players, animate_weapons, player_jump_control, player_move, player_shoot};
+use server::plugin::ServerPlugin;
 
 fn main() {
     let mut app = App::new();
@@ -38,36 +30,7 @@ fn main() {
     app.add_plugins(RapierPhysicsPlugin::<NoUserData>::pixels_per_meter(100.0));
     app.add_plugins(RapierDebugRenderPlugin::default());
 
-    app.insert_resource(ServerLobby::default());
-    app.insert_resource(RenetServerVisualizer::<200>::default());
-    app.init_resource::<Events<CollisionEvent>>();
-
-    add_netcode_network(&mut app);
-
-
-    app.add_systems(Update, (
-        server_event,
-        animate_players,
-        animate_weapons,
-        player_jump_control,
-        player_move,
-        player_shoot,
-        despawn_weapon_fx_out_of_screen_system
-    ));
-
-    app.add_systems(FixedUpdate, (
-        server_network_sync,
-        update_player_inputs_from_clients,
-    ));
-
-
-    app.add_systems(Startup, (
-        load_player_textures,
-        load_weapon_textures,
-        load_weapon_fx_textures,
-        setup_camera,
-        setup_ground,
-    ));
+    app.add_plugins(ServerPlugin);
 
     app.run();
 }

@@ -1,6 +1,6 @@
-use crate::entities::player::component::PlayerWeaponSelected;
-use crate::entities::player::player_texture::PlayerTextureEntityType;
-use crate::entities::player::weapon_texture::WeaponTextureEntityType;
+use crate::player::component::PlayerWeaponSelected;
+use crate::player::texture::PlayerTextureType;
+use crate::weapon::texture::WeaponTextureType;
 use bevy::prelude::Component;
 use bevy_renet2::prelude::{ChannelConfig, ClientId, ConnectionConfig, SendType};
 use serde::{Deserialize, Serialize};
@@ -24,8 +24,8 @@ pub enum ServerMessages {
         entity: u64,
         id: ClientId,
         translation: [f32; 3],
-        player_texture_entity_type: PlayerTextureEntityType,
-        weapon_texture_entity_type: WeaponTextureEntityType,
+        player_texture_entity_type: PlayerTextureType,
+        weapon_texture_entity_type: WeaponTextureType,
     },
     PlayerRemove { id: ClientId },
 }
@@ -36,7 +36,7 @@ pub struct NetworkedEntities {
     pub translations: Vec<[f32; 3]>,
     pub sprite_index: Vec<usize>,
     pub sprite_flip_x: Vec<bool>,
-    pub player_texture_entity_type: Vec<PlayerTextureEntityType>,
+    pub player_texture_entity_type: Vec<PlayerTextureType>,
     pub weapon_texture_entity_type: Vec<PlayerWeaponSelected>,
     pub player_aim_direction: Vec<f32>,
 }
