@@ -94,13 +94,13 @@ impl Default for SensorBundle {
 
 #[derive(Component, Debug, Serialize, Deserialize, Clone)]
 pub struct PlayerWeaponSelected {
-    pub weapon_entity_type: WeaponTextureType,
+    pub weapon_texture_type: WeaponTextureType,
 }
 
 impl PlayerWeaponSelected {
     pub fn default_weapon() -> Self {
         Self {
-            weapon_entity_type: WeaponTextureType::Pistol,
+            weapon_texture_type: WeaponTextureType::Pistol,
         }
     }
 }

@@ -15,17 +15,17 @@ pub const WEAPONS_FX: &str = "textures/weapons/weapons_fx.png";
 #[derive(Component)]
 pub struct FxComponent;
 
-#[derive(Resource, Clone)]
-pub struct WeaponFxTextures(pub HashMap<WeaponFxTextureEntityType, Handle<Image>>);
+#[derive(Resource, Clone, Debug)]
+pub struct WeaponFxTextures(pub HashMap<WeaponFxTextureType, Handle<Image>>);
 
-impl TextureHandleMap<WeaponFxTextureEntityType> for WeaponFxTextures {
-    fn get_handle(&self, key: WeaponFxTextureEntityType) -> Option<Handle<Image>> {
+impl TextureHandleMap<WeaponFxTextureType> for WeaponFxTextures {
+    fn get_handle(&self, key: WeaponFxTextureType) -> Option<Handle<Image>> {
         self.0.get(&key).cloned()
     }
 }
 
 #[derive(Component, Clone, Eq, PartialEq, Hash, Debug, Serialize, Deserialize, Default)]
-pub enum WeaponFxTextureEntityType {
+pub enum WeaponFxTextureType {
     #[default]
     Pistol,
     Shotgun,
@@ -33,13 +33,13 @@ pub enum WeaponFxTextureEntityType {
     GrenadeLauncher,
 }
 
-impl From<&WeaponTextureType> for WeaponFxTextureEntityType {
+impl From<&WeaponTextureType> for WeaponFxTextureType {
     fn from(value: &WeaponTextureType) -> Self {
         match value {
-            WeaponTextureType::Pistol => WeaponFxTextureEntityType::Pistol,
-            WeaponTextureType::Shotgun => WeaponFxTextureEntityType::Shotgun,
-            WeaponTextureType::Rifle => WeaponFxTextureEntityType::Rifle,
-            WeaponTextureType::GrenadeLauncher => WeaponFxTextureEntityType::GrenadeLauncher,
+            WeaponTextureType::Pistol => WeaponFxTextureType::Pistol,
+            WeaponTextureType::Shotgun => WeaponFxTextureType::Shotgun,
+            WeaponTextureType::Rifle => WeaponFxTextureType::Rifle,
+            WeaponTextureType::GrenadeLauncher => WeaponFxTextureType::GrenadeLauncher,
         }
     }
 }
@@ -47,7 +47,7 @@ pub struct WeaponFxTextureEntity {
     pub texture_atlas_layout: TextureAtlasLayout,
     pub animation_indices: AnimationIndices,
     pub texture_path: String,
-    pub weapon_fx_texture_type: WeaponFxTextureEntityType,
+    pub weapon_fx_texture_type: WeaponFxTextureType,
 }
 
 
@@ -58,47 +58,47 @@ const WEAPON_FX_FRAME_COUNT: u32 = 1;
 pub const PISTOL_FX_SIZE: UVec2 = UVec2::new(31, 15);
 const PISTOL_FX_START_MIN: UVec2 = UVec2::new(3, 2431);
 impl WeaponFxTextureEntity {
-    pub fn new(weapon_texture: &WeaponFxTextureEntityType) -> Self {
+    pub fn new(weapon_texture: &WeaponFxTextureType) -> Self {
         match weapon_texture {
-            WeaponFxTextureEntityType::Pistol => make_weapon_fx_texture!(
-                WeaponFxTextureEntityType::Pistol,
+            WeaponFxTextureType::Pistol => make_weapon_fx_texture!(
+                WeaponFxTextureType::Pistol,
                 PISTOL_FX_START_MIN,
                 PISTOL_FX_SIZE
             ),
-            WeaponFxTextureEntityType::Shotgun => make_weapon_fx_texture!(
-                WeaponFxTextureEntityType::Shotgun,
+            WeaponFxTextureType::Shotgun => make_weapon_fx_texture!(
+                WeaponFxTextureType::Shotgun,
                 PISTOL_FX_START_MIN,
                 PISTOL_FX_SIZE
             ),
-            WeaponFxTextureEntityType::Rifle => make_weapon_fx_texture!(
-                WeaponFxTextureEntityType::Rifle,
+            WeaponFxTextureType::Rifle => make_weapon_fx_texture!(
+                WeaponFxTextureType::Rifle,
                 PISTOL_FX_START_MIN,
                 PISTOL_FX_SIZE
             ),
-            WeaponFxTextureEntityType::GrenadeLauncher => make_weapon_fx_texture!(
-                WeaponFxTextureEntityType::GrenadeLauncher,
+            WeaponFxTextureType::GrenadeLauncher => make_weapon_fx_texture!(
+                WeaponFxTextureType::GrenadeLauncher,
                 PISTOL_FX_START_MIN,
                 PISTOL_FX_SIZE
             ),
         }
     }
 
-    pub fn all() -> Vec<(WeaponFxTextureEntityType, &'static str)> {
+    pub fn all() -> Vec<(WeaponFxTextureType, &'static str)> {
         vec![
-            (WeaponFxTextureEntityType::Pistol, WEAPONS_FX),
-            (WeaponFxTextureEntityType::Shotgun, WEAPONS_FX),
-            (WeaponFxTextureEntityType::Rifle, WEAPONS_FX),
-            (WeaponFxTextureEntityType::GrenadeLauncher, WEAPONS_FX),
+            (WeaponFxTextureType::Pistol, WEAPONS_FX),
+            (WeaponFxTextureType::Shotgun, WEAPONS_FX),
+            (WeaponFxTextureType::Rifle, WEAPONS_FX),
+            (WeaponFxTextureType::GrenadeLauncher, WEAPONS_FX),
         ]
     }
 }
 
-impl HasTextureEntityType<WeaponFxTextureEntityType> for WeaponFxTextureEntity {
+impl HasTextureEntityType<WeaponFxTextureType> for WeaponFxTextureEntity {
     fn texture_atlas_layout(&self) -> TextureAtlasLayout {
         self.texture_atlas_layout.clone()
     }
 
-    fn texture_entity_type(&self) -> WeaponFxTextureEntityType {
+    fn texture_entity_type(&self) -> WeaponFxTextureType {
         self.weapon_fx_texture_type.clone()
     }
 }

@@ -1,5 +1,6 @@
 use crate::player::component::PlayerWeaponSelected;
 use crate::player::texture::PlayerTextureType;
+use crate::weapon::fx_texture::WeaponFxTextureType;
 use crate::weapon::texture::WeaponTextureType;
 use bevy::prelude::Component;
 use bevy_renet2::prelude::{ChannelConfig, ClientId, ConnectionConfig, SendType};
@@ -30,6 +31,7 @@ pub enum ServerMessages {
     PlayerRemove { id: ClientId },
 }
 
+
 #[derive(Debug, Serialize, Deserialize, Default)]
 pub struct NetworkedEntities {
     pub entities: Vec<u64>,
@@ -39,6 +41,11 @@ pub struct NetworkedEntities {
     pub player_texture_entity_type: Vec<PlayerTextureType>,
     pub weapon_texture_entity_type: Vec<PlayerWeaponSelected>,
     pub player_aim_direction: Vec<f32>,
+    pub projectile_entities: Vec<u64>,
+    pub projectile_translations: Vec<[f32; 3]>,
+    pub projectile_sprite_index: Vec<usize>,
+    pub projectile_sprite_flip_y: Vec<bool>,
+    pub weapon_fx_texture_type: WeaponFxTextureType,
 }
 
 impl From<ClientChannel> for u8 {

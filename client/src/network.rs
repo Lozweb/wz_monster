@@ -5,7 +5,10 @@ use std::collections::HashMap;
 pub mod system;
 
 #[derive(Default, Resource)]
-pub struct NetworkMapping(pub(crate) HashMap<Entity, Entity>);
+pub struct PlayerMapping(pub(crate) HashMap<Entity, Entity>);
+
+#[derive(Default, Resource)]
+pub struct ProjectileMapping(pub(crate) HashMap<Entity, Entity>);
 
 #[derive(Debug)]
 struct PlayerInfo {

@@ -1,6 +1,6 @@
 use crate::animation::player_animation;
 use crate::network::system::client_event;
-use crate::network::{ClientLobby, Connected, NetworkMapping};
+use crate::network::{ClientLobby, Connected, PlayerMapping, ProjectileMapping};
 use crate::player_input::{send_input, update_mouse_coords, MainCamera};
 use bevy::app::{App, Plugin, Startup, Update};
 use bevy::log::error;
@@ -11,14 +11,15 @@ use game_core::decor::system::setup_ground;
 use game_core::network::network::{connection_config, PROTOCOL_ID};
 use game_core::network::utils::{get_current_time, get_native_socket, get_socket};
 use game_core::player::component::{AimDirection, CurrentClientId, MouseWorldCoords, PlayerInput};
-use game_core::texture::system::{load_player_textures, load_weapon_textures};
+use game_core::texture::system::{load_player_textures, load_weapon_fx_textures, load_weapon_textures};
 
 pub struct ClientPlugin;
 
 impl Plugin for ClientPlugin {
     fn build(&self, app: &mut App) {
         app.insert_resource(ClientLobby::default());
-        app.insert_resource(NetworkMapping::default());
+        app.insert_resource(PlayerMapping::default());
+        app.insert_resource(ProjectileMapping::default());
         app.insert_resource(PlayerInput::default());
         app.insert_resource(MouseWorldCoords::default());
         app.insert_resource(AimDirection::default());
@@ -36,7 +37,8 @@ impl Plugin for ClientPlugin {
             setup_camera,
             setup_ground,
             load_player_textures,
-            load_weapon_textures
+            load_weapon_textures,
+            load_weapon_fx_textures,
         ));
     }
 }

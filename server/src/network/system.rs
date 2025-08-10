@@ -2,7 +2,7 @@ use crate::network::player::{broadcast_player_create, create_player, send_existi
 use crate::plugin::ServerLobby;
 use bevy::asset::Assets;
 use bevy::image::TextureAtlasLayout;
-use bevy::log::error;
+use bevy::log::{error, info};
 use bevy::math::Vec3;
 use bevy::prelude::{ColorMaterial, Commands, Entity, EventReader, Mesh, Query, Res, ResMut, Sprite, Transform, With};
 use bevy_renet2::prelude::{ClientId, RenetServer, ServerEvent};
@@ -10,6 +10,7 @@ use game_core::network::network::{ClientChannel, NetworkedEntities, ServerChanne
 use game_core::player::command::rand_player_texture_entity_type;
 use game_core::player::component::{PlayerInput, PlayerNetwork, PlayerWeaponSelected};
 use game_core::player::texture::{PlayerTextureType, PlayerTextures};
+use game_core::weapon::fx_texture::{FxComponent, WeaponFxTextureType};
 use game_core::weapon::texture::WeaponTextures;
 
 #[allow(clippy::too_many_arguments)]
@@ -32,7 +33,7 @@ pub fn server_event(
 
                 let position = Vec3::new(fastrand::f32() * 800.0 - 400.0, 0.0, 0.0);
                 let player_texture_entity_type = rand_player_texture_entity_type();
-                let weapon_texture_entity_type = PlayerWeaponSelected::default_weapon().weapon_entity_type;
+                let weapon_texture_entity_type = PlayerWeaponSelected::default_weapon().weapon_texture_type;
 
                 let player_entity = create_player(
                     position,
@@ -124,6 +125,7 @@ pub fn server_network_sync(
         &PlayerWeaponSelected,
         &PlayerInput
     ), With<PlayerNetwork>>,
+    projectile_query: Query<(Entity, &Transform, &Sprite, &WeaponFxTextureType), With<FxComponent>>,
 ) {
     let mut networked_entities = NetworkedEntities::default();
     for (entity, transform, sprite, texture_entity_type, player_weapon_selected, player_input) in player_query.iter() {
@@ -138,6 +140,19 @@ pub fn server_network_sync(
         networked_entities.player_texture_entity_type.push(texture_entity_type.clone());
         networked_entities.weapon_texture_entity_type.push(player_weapon_selected.clone());
         networked_entities.player_aim_direction.push(player_input.aim_direction);
+    }
+
+    for (projectile_entity, transform, sprite, weapon_texture_type) in projectile_query.iter() {
+        info!("Projectile entity: {:?}", projectile_entity);
+        networked_entities.projectile_entities.push(projectile_entity.to_bits());
+        networked_entities.projectile_translations.push(transform.translation.into());
+
+        if let Some(texture) = &sprite.texture_atlas {
+            networked_entities.projectile_sprite_index.push(texture.index);
+            networked_entities.projectile_sprite_flip_y.push(sprite.flip_y);
+        }
+
+        networked_entities.weapon_fx_texture_type = weapon_texture_type.clone();
     }
 
     if !networked_entities.entities.is_empty() {

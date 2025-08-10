@@ -3,30 +3,29 @@ use crate::texture::entity::TextureHandleMap;
 use crate::texture::math::is_face_right;
 use crate::texture::system::handle_from_texture;
 use crate::weapon::component::{spawn_weapon_fx_physics_bundle, PivotDisk, Weapon};
-use crate::weapon::fx_texture::{FxComponent, WeaponFxTextureEntity, WeaponFxTextureEntityType, WeaponFxTextures};
+use crate::weapon::fx_texture::{FxComponent, WeaponFxTextureEntity, WeaponFxTextureType, WeaponFxTextures};
 use crate::weapon::texture::{WeaponTextureEntity, WeaponTextureType, WeaponTextures};
 use bevy::asset::{Assets, Handle};
 use bevy::color::Color;
 use bevy::image::{Image, TextureAtlas, TextureAtlasLayout};
 use bevy::math::{Quat, Vec3};
 use bevy::prelude::{Circle, ColorMaterial, Commands, Entity, GlobalTransform, Mesh, Mesh2d, MeshMaterial2d, Name, Query, Res, ResMut, Sprite, Timer, TimerMode, Transform, With};
-use bevy_renet2::prelude::ClientId;
 
 pub fn spawn_weapon_fx(
     commands: &mut Commands,
     texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
     weapon_fx_textures: &mut Res<WeaponFxTextures>,
     position: Vec3,
-    weapon_fx_texture_entity_type: &WeaponFxTextureEntityType,
+    weapon_fx_texture_entity_type: &WeaponFxTextureType,
     aim_direction: f32,
-    client_id: ClientId,
+    add_physics: bool,
 ) -> Entity {
     let weapon_fx_texture = WeaponFxTextureEntity::new(weapon_fx_texture_entity_type);
     let (image, layout) =
-        weapon_texture_fx_entity_to_handle(&weapon_fx_texture.weapon_fx_texture_type, &mut *texture_atlas_layouts, weapon_fx_textures);
+        handle_from_weapon_fx_texture(&weapon_fx_texture.weapon_fx_texture_type, &mut *texture_atlas_layouts, weapon_fx_textures);
     let is_face_right = is_face_right(aim_direction);
 
-    commands.spawn((
+    let mut fx = commands.spawn((
         FxComponent,
         Sprite {
             flip_y: !is_face_right,
@@ -38,13 +37,20 @@ pub fn spawn_weapon_fx(
                 },
             )
         },
+        weapon_fx_texture.weapon_fx_texture_type,
         weapon_fx_texture.animation_indices,
         AnimationTimer(Timer::from_seconds(0.1, TimerMode::Repeating)),
         Transform::from_translation(position)
             .with_scale(Vec3::splat(1.))
             .with_rotation(Quat::from_rotation_z(aim_direction)),
         GlobalTransform::default(),
-    )).insert(spawn_weapon_fx_physics_bundle(aim_direction, client_id)).id()
+    ));
+
+    if add_physics {
+        fx.insert(spawn_weapon_fx_physics_bundle(aim_direction));
+    };
+
+    fx.id()
 }
 
 pub fn spawn_weapon_entity(
@@ -67,7 +73,7 @@ pub fn spawn_weapon_entity(
 
     let weapon_texture = WeaponTextureEntity::new(weapon_texture_entity_type);
     let (image, layout) =
-        weapon_texture_entity_to_handle(&weapon_texture.weapon_texture_type, &mut *texture_atlas_layouts, weapon);
+        handle_from_weapon_texture(&weapon_texture.weapon_texture_type, &mut *texture_atlas_layouts, weapon);
 
     let weapon_entity = commands.spawn((
         Name::new("Weapons"),
@@ -90,7 +96,7 @@ pub fn spawn_weapon_entity(
 
     (disk_entity, weapon_entity)
 }
-pub fn weapon_texture_entity_to_handle(
+pub fn handle_from_weapon_texture(
     weapon_texture_type: &WeaponTextureType,
     texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
     weapon_textures: &Res<WeaponTextures>,
@@ -103,8 +109,8 @@ pub fn weapon_texture_entity_to_handle(
         WeaponTextures::get_handle,
     )
 }
-pub fn weapon_texture_fx_entity_to_handle(
-    weapon_fx_texture_type: &WeaponFxTextureEntityType,
+pub fn handle_from_weapon_fx_texture(
+    weapon_fx_texture_type: &WeaponFxTextureType,
     texture_atlas_layouts: &mut ResMut<Assets<TextureAtlasLayout>>,
     weapon_textures: &Res<WeaponFxTextures>,
 ) -> (Handle<Image>, Handle<TextureAtlasLayout>) {

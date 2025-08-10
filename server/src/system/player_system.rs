@@ -4,11 +4,11 @@ use bevy::math::Vec3;
 use bevy::prelude::{Commands, EventReader, GlobalTransform, Query, Res, ResMut, With};
 use bevy_rapier2d::dynamics::Velocity;
 use bevy_rapier2d::pipeline::CollisionEvent;
-use game_core::player::component::{Grounded, JumpCounter, Player, PlayerChildren, PlayerInput, PlayerNetwork, PlayerWeaponSelected};
+use game_core::player::component::{Grounded, JumpCounter, Player, PlayerChildren, PlayerInput, PlayerWeaponSelected};
 use game_core::player::math::{apply_jump_velocity, apply_velocity};
 use game_core::weapon::command::spawn_weapon_fx;
 use game_core::weapon::component::Weapon;
-use game_core::weapon::fx_texture::{WeaponFxTextureEntityType, WeaponFxTextures};
+use game_core::weapon::fx_texture::{WeaponFxTextureType, WeaponFxTextures};
 
 pub fn player_move(
     mut query: Query<(
@@ -48,10 +48,10 @@ pub fn player_shoot(
     mut commands: Commands,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
     mut weapon_fx_textures: Res<WeaponFxTextures>,
-    player_query: Query<(&PlayerInput, &PlayerWeaponSelected, &PlayerChildren, &PlayerNetwork), With<Player>>,
+    player_query: Query<(&PlayerInput, &PlayerWeaponSelected, &PlayerChildren), With<Player>>,
     weapon_query: Query<&GlobalTransform, With<Weapon>>,
 ) {
-    for (player_input, player_weapon_selected, children, player_network) in player_query.iter() {
+    for (player_input, player_weapon_selected, children) in player_query.iter() {
         let Ok(global_transform) = weapon_query.get(children.weapon) else { return };
 
         if player_input.shoot {
@@ -62,9 +62,9 @@ pub fn player_shoot(
                 &mut texture_atlas_layouts,
                 &mut weapon_fx_textures,
                 position,
-                &WeaponFxTextureEntityType::from(&player_weapon_selected.weapon_entity_type),
+                &WeaponFxTextureType::from(&player_weapon_selected.weapon_texture_type),
                 player_input.aim_direction,
-                player_network.id,
+                true,
             );
         }
     }

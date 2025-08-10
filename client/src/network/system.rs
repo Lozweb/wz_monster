@@ -1,4 +1,4 @@
-use crate::network::{ClientLobby, NetworkMapping, PlayerInfo};
+use crate::network::{ClientLobby, PlayerInfo, PlayerMapping};
 use bevy::asset::Assets;
 
 use bevy::image::TextureAtlasLayout;
@@ -20,7 +20,7 @@ pub fn client_event(
     mut client: ResMut<RenetClient>,
     mut lobby: ResMut<ClientLobby>,
     mut texture_atlas_layouts: ResMut<Assets<TextureAtlasLayout>>,
-    mut network_mapping: ResMut<NetworkMapping>,
+    mut network_mapping: ResMut<PlayerMapping>,
     mut meshes: ResMut<Assets<Mesh>>,
     mut materials: ResMut<Assets<ColorMaterial>>,
 ) {
