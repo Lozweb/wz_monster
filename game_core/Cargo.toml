@@ -7,5 +7,5 @@ edition = "2024"
 bevy = "0.16.1"
 bevy_renet2 = { version = "0.10.0", features = ["netcode", "native_transport"] }
 serde = { version = "1.0", features = ["derive"] }
-bevy_rapier2d = "0.30.0"
+bevy_rapier2d = "0.31.0"
 fastrand = "2.3.0"
