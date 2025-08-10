@@ -1,6 +1,6 @@
-use crate::weapon::fx_texture::{FxComponent, PISTOL_FX_SIZE};
+use crate::weapon::fx_texture::PISTOL_FX_SIZE;
 use bevy::math::Vec2;
-use bevy::prelude::{Commands, Component, Entity, Name, Query, Transform, With};
+use bevy::prelude::{Component, Name};
 use bevy_rapier2d::dynamics::{GravityScale, LockedAxes, RigidBody, Velocity};
 use bevy_rapier2d::geometry::{Collider, CollisionGroups, Friction, Group};
 use bevy_renet2::prelude::ClientId;
@@ -32,6 +32,7 @@ pub fn spawn_weapon_fx_physics_bundle(
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
         Velocity::linear(Vec2::new(aim_direction.cos() * WEAPON_FX_SPEED, aim_direction.sin() * WEAPON_FX_SPEED)),
+        //Velocity::zero(),
         Collider::ball((PISTOL_FX_SIZE.y / 2) as f32),
         GravityScale(0.0),
         Friction::coefficient(0.0),
@@ -43,15 +44,3 @@ pub fn spawn_weapon_fx_physics_bundle(
 }
 
 
-pub fn despawn_weapon_fx_out_of_screen_system(
-    mut commands: Commands,
-    query: Query<(Entity, &Transform), With<FxComponent>>,
-) {
-    let max_distance: f32 = 500.0;
-    for (entity, transform) in query.iter() {
-        let distance = transform.translation.length();
-        if distance > max_distance {
-            commands.entity(entity).despawn();
-        }
-    }
-}

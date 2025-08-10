@@ -9,7 +9,7 @@ use bevy::asset::{Assets, Handle};
 use bevy::color::Color;
 use bevy::image::{Image, TextureAtlas, TextureAtlasLayout};
 use bevy::math::{Quat, Vec3};
-use bevy::prelude::{Circle, ColorMaterial, Commands, Entity, GlobalTransform, Mesh, Mesh2d, MeshMaterial2d, Name, Res, ResMut, Sprite, Timer, TimerMode, Transform};
+use bevy::prelude::{Circle, ColorMaterial, Commands, Entity, GlobalTransform, Mesh, Mesh2d, MeshMaterial2d, Name, Query, Res, ResMut, Sprite, Timer, TimerMode, Transform, With};
 use bevy_renet2::prelude::ClientId;
 
 pub fn spawn_weapon_fx(
@@ -115,4 +115,17 @@ pub fn weapon_texture_fx_entity_to_handle(
         WeaponFxTextureEntity::new,
         WeaponFxTextures::get_handle,
     )
+}
+
+pub fn despawn_weapon_fx_out_of_screen_system(
+    mut commands: Commands,
+    query: Query<(Entity, &Transform), With<FxComponent>>,
+) {
+    let max_distance: f32 = 500.0;
+    for (entity, transform) in query.iter() {
+        let distance = transform.translation.length();
+        if distance > max_distance {
+            commands.entity(entity).despawn();
+        }
+    }
 }

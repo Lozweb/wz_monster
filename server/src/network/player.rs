@@ -3,7 +3,6 @@ use bevy::image::TextureAtlasLayout;
 use bevy::log::error;
 use bevy::math::Vec3;
 use bevy::prelude::{ColorMaterial, Commands, Entity, Mesh, Query, Res, ResMut, Transform};
-use bevy_rapier2d::geometry::Group;
 use bevy_renet2::prelude::{ClientId, RenetServer};
 use game_core::network::network::{ServerChannel, ServerMessages};
 use game_core::player::command::{spawn_player_entity, SpawnPlayerParams};

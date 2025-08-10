@@ -13,7 +13,7 @@ use game_core::network::utils::{get_current_time, get_native_socket, get_socket}
 use game_core::player::animation::animate_players;
 use game_core::texture::system::{load_player_textures, load_weapon_fx_textures, load_weapon_textures};
 use game_core::weapon::animation::animate_weapons;
-use game_core::weapon::component::despawn_weapon_fx_out_of_screen_system;
+use game_core::weapon::command::despawn_weapon_fx_out_of_screen_system;
 use renet2_visualizer::RenetServerVisualizer;
 use std::collections::HashMap;
 

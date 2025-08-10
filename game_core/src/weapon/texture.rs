@@ -40,7 +40,7 @@ const WEAPON_LAYOUT_SIZE: UVec2 = UVec2::new(502, 448);
 const WEAPON_FRAME_PADDING: u32 = 0;
 const WEAPON_FRAME_COUNT: u32 = 1;
 
-const PISTOL_SIZE: UVec2 = UVec2::new(51, 23);
+pub const PISTOL_SIZE: UVec2 = UVec2::new(51, 23);
 const PISTOL_START_MIN: UVec2 = UVec2::new(358, 200);
 
 const SHOTGUN_SIZE: UVec2 = UVec2::new(51, 23);

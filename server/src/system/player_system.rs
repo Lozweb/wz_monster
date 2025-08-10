@@ -6,7 +6,6 @@ use bevy_rapier2d::dynamics::Velocity;
 use bevy_rapier2d::pipeline::CollisionEvent;
 use game_core::player::component::{Grounded, JumpCounter, Player, PlayerChildren, PlayerInput, PlayerNetwork, PlayerWeaponSelected};
 use game_core::player::math::{apply_jump_velocity, apply_velocity};
-use game_core::texture::math::is_face_right;
 use game_core::weapon::command::spawn_weapon_fx;
 use game_core::weapon::component::Weapon;
 use game_core::weapon::fx_texture::{WeaponFxTextureEntityType, WeaponFxTextures};
@@ -56,13 +55,7 @@ pub fn player_shoot(
         let Ok(global_transform) = weapon_query.get(children.weapon) else { return };
 
         if player_input.shoot {
-            let offset = Vec3::new(32.5, 0.0, 0.0);
-
-            let position = if is_face_right(player_input.aim_direction) {
-                global_transform.translation() + offset
-            } else {
-                global_transform.translation() + (-offset)
-            };
+            let position = global_transform.transform_point(Vec3::new(52.5, 0.0, 0.0));
 
             spawn_weapon_fx(
                 &mut commands,

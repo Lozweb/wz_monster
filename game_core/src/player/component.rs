@@ -105,21 +105,35 @@ impl PlayerWeaponSelected {
     }
 }
 
-pub fn player_physics() -> (RigidBody, LockedAxes, Velocity, Collider, GravityScale, Friction) {
+pub fn player_physics() -> (
+    RigidBody,
+    LockedAxes,
+    Velocity,
+    Collider,
+    GravityScale,
+    Friction,
+) {
+    let points = vec![
+        Vec2::new(0.0, 80.0),     // haut
+        Vec2::new(30.0, 40.0),    // haut droite
+        Vec2::new(59.0, 0.0),     // droite
+        Vec2::new(30.0, -40.0),   // bas droite
+        Vec2::new(0.0, -80.0),    // bas
+        Vec2::new(-30.0, -40.0),  // bas gauche
+        Vec2::new(-59.0, 0.0),    // gauche
+        Vec2::new(-30.0, 40.0),   // haut gauche
+    ];
+
     (
         RigidBody::Dynamic,
         LockedAxes::ROTATION_LOCKED,
         Velocity::zero(),
-        Collider::convex_hull(&[
-            Vec2::new(0.0, 80.0),
-            Vec2::new(59.0, 0.0),
-            Vec2::new(0.0, -80.0),
-            Vec2::new(-59.0, 0.0),
-        ]).unwrap(),
+        Collider::convex_hull(&points).unwrap(),
         GravityScale(2.5),
         Friction::coefficient(0.0),
     )
 }
+
 
 pub fn spawn_player_sensor(
     commands: &mut Commands,
